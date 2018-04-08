@@ -7,6 +7,7 @@ using System.Threading;
 
 namespace eagle.tunnel.dotnet.core {
     public class Server {
+        private static string version = "1.0.0";
         private static Queue<Tunnel> clients;
         private static List<Socket> servers;
         private static bool IsRunning { get; set; } // Server will keep running.
@@ -148,6 +149,11 @@ namespace eagle.tunnel.dotnet.core {
                     }
                 }
             }
+        }
+
+        public static string Version()
+        {
+            return version;
         }
     }
 }
