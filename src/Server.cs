@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -8,16 +8,16 @@ using System.Threading;
 namespace eagle.tunnel.dotnet.core {
     public class Server {
         private static string version = "1.0.0";
-        private static Queue<Tunnel> clients;
-        private static List<Socket> servers;
+        private static ConcurrentQueue<Tunnel> clients;
+        private static Socket[] servers;
         private static bool IsRunning { get; set; } // Server will keep running.
-        public static bool IsWorking {get; private set;} // Server has started working.
+        public static bool IsWorking { get; private set; } // Server has started working.
 
         public static void Start (IPEndPoint[] localAddress) {
             if (!IsRunning) {
                 if (localAddress != null) {
-                    clients = new Queue<Tunnel> ();
-                    servers = new List<Socket> ();
+                    clients = new ConcurrentQueue<Tunnel> ();
+                    servers = new Socket[localAddress.Length];
                     IsRunning = true;
 
                     Thread threadLimitCheck = new Thread (LimitSpeed);
@@ -27,11 +27,13 @@ namespace eagle.tunnel.dotnet.core {
                     Socket server;
                     for (int i = 1; i < localAddress.Length; ++i) {
                         server = CreateServer (localAddress[i]);
+                        servers[i] = server;
                         Thread thread = new Thread (Listen);
                         thread.IsBackground = true;
                         thread.Start (server);
                     }
                     server = CreateServer (localAddress[0]);
+                    servers[0] = server;
                     IsWorking = true;
                     Listen (server);
                 }
@@ -50,9 +52,6 @@ namespace eagle.tunnel.dotnet.core {
                 }
                 break;
             } while (done);
-            lock (servers) {
-                servers.Add (server);
-            }
             Console.WriteLine ("Server Started: {0}", ipep.ToString ());
             return server;
         }
@@ -69,15 +68,16 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         private static void HandleClient (Socket socket2Client) {
-            lock (clients) {
-                while (clients.Count > Conf.maxClientsCount) {
-                    Tunnel tunnel2Close = clients.Dequeue ();
-                    tunnel2Close.Close ();
-                }
+            bool resultOfDequeue = true;
+            while (clients.Count > Conf.maxClientsCount) {
+                resultOfDequeue = clients.TryDequeue (out Tunnel tunnel2Close);
+                tunnel2Close.Close ();
             }
-            Thread threadHandleClient = new Thread (_handleClient);
-            threadHandleClient.IsBackground = true;
-            threadHandleClient.Start (socket2Client);
+            if (resultOfDequeue) {
+                Thread threadHandleClient = new Thread (_handleClient);
+                threadHandleClient.IsBackground = true;
+                threadHandleClient.Start (socket2Client);
+            }
         }
 
         private static void _handleClient (object socket2ClientObj) {
@@ -93,9 +93,7 @@ namespace eagle.tunnel.dotnet.core {
                 Tunnel tunnel = RequestHandler.Handle (req, socket2Client);
                 if (tunnel != null) {
                     tunnel.Flow ();
-                    lock (clients) {
-                        clients.Enqueue (tunnel);
-                    }
+                    clients.Enqueue (tunnel);
                 }
             }
         }
@@ -107,9 +105,8 @@ namespace eagle.tunnel.dotnet.core {
                     speed += item.Speed ();
                 }
             }
-            if(Conf.LocalUser!=null)
-            {
-                speed += Conf.LocalUser.Speed();
+            if (Conf.LocalUser != null) {
+                speed += Conf.LocalUser.Speed ();
             }
             return speed;
         }
@@ -140,19 +137,16 @@ namespace eagle.tunnel.dotnet.core {
                     }
                 }
                 // shut down all connections
-                lock (clients) {
-                    while (clients.Count > 0) {
-                        Tunnel tunnel2Close = clients.Dequeue ();
-                        if (tunnel2Close.IsWorking) {
-                            tunnel2Close.Close ();
-                        }
+                while (clients.Count > 0) {
+                    bool resultOfDequeue = clients.TryDequeue (out Tunnel tunnel2Close);
+                    if (resultOfDequeue && tunnel2Close.IsWorking) {
+                        tunnel2Close.Close ();
                     }
                 }
             }
         }
 
-        public static string Version()
-        {
+        public static string Version () {
             return version;
         }
     }
