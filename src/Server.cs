@@ -99,8 +99,8 @@ namespace eagle.tunnel.dotnet.core {
                         Socket client = server.Accept ();
                         HandleClient (client);
                     } catch (SocketException se) {
-                        Console.WriteLine ("{0} -> {1}",
-                            server.LocalEndPoint.ToString (), se.Message);
+                        Console.WriteLine ("{0}",
+                            se.Message);
                         break;
                     } catch (ObjectDisposedException) {;
                     } catch (Exception e) {
