@@ -27,48 +27,64 @@ namespace eagle.tunnel.dotnet.core {
                     Socket server;
                     for (int i = 1; i < localAddress.Length; ++i) {
                         server = CreateServer (localAddress[i]);
-                        servers[i] = server;
-                        Thread thread = new Thread (Listen);
-                        thread.IsBackground = true;
-                        thread.Start (server);
+                        if (server != null) {
+                            servers[i] = server;
+                            Thread thread = new Thread (Listen);
+                            thread.IsBackground = true;
+                            thread.Start (server);
+                        } else {
+                            Console.WriteLine ("Create Listen failed: {0}",
+                                localAddress[i].ToString ());
+                        }
                     }
                     server = CreateServer (localAddress[0]);
-                    servers[0] = server;
-                    IsWorking = true;
-                    Listen (server);
+                    if (server != null) {
+                        servers[0] = server;
+                        IsWorking = true;
+                        Listen (server);
+                    } else {
+                        Console.WriteLine ("create Listen failed: {0}",
+                            localAddress[0]);
+                    }
                 }
             }
         }
 
         private static Socket CreateServer (IPEndPoint ipep) {
-            Socket server = new Socket (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            bool done = false;
-            do {
-                bool first = true;
-                try {
-                    server.Bind (ipep);
-                    done = true;
-                } catch(SocketException se) {
-                    if (first) {
-                        Console.WriteLine("bind warning: {0} -> {1}", ipep.ToString(), se.Message);
-                        first = false;
+            Socket server = null;
+            if (ipep != null) {
+                server = new Socket (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                bool firstTime = true;
+                do {
+                    try {
+                        server.Bind (ipep);
+                    } catch (SocketException se) {
+                        if (firstTime) {
+                            Console.WriteLine ("bind warning: {0} -> {1}", ipep.ToString (), se.Message);
+                            Console.WriteLine ("retrying...");
+                            firstTime = false;
+                        }
+                        Thread.Sleep (20000); // wait for 20s to retry.
                     }
-                    Thread.Sleep (20000); // wait for 20s to retry.
-                }
-                break;
-            } while (done);
-            Console.WriteLine ("Server Started: {0}", ipep.ToString ());
+                } while (!server.IsBound);
+            }
             return server;
         }
 
         private static void Listen (object socket2Listen) {
             Socket server = socket2Listen as Socket;
-            server.Listen (100);
+            server.Listen(100);
+            Console.WriteLine ("start to Listen: {0}",
+                server.LocalEndPoint.ToString ());
             while (IsRunning) {
                 try {
                     Socket client = server.Accept ();
                     HandleClient (client);
-                } catch { break; }
+                } catch (SocketException se) {
+                    Console.WriteLine ("{0} -> {1}",
+                        server.LocalEndPoint.ToString (), se.Message);
+                    break;
+                }
             }
         }
 
@@ -82,6 +98,8 @@ namespace eagle.tunnel.dotnet.core {
                 Thread threadHandleClient = new Thread (_handleClient);
                 threadHandleClient.IsBackground = true;
                 threadHandleClient.Start (socket2Client);
+            } else {
+                Console.WriteLine ("failed to dequeue before new client handled");
             }
         }
 

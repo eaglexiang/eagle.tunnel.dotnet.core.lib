@@ -162,7 +162,7 @@ namespace eagle.tunnel.dotnet.core {
                 List<string> remoteAddressStrs = Conf.allConf["relayer"];
                 remoteAddresses = CreateEndPoints (remoteAddressStrs);
             } catch (KeyNotFoundException) {
-                Console.WriteLine ("Relayer not found.");
+                Console.WriteLine ("Warning: RelayRelayer not found.");
             }
             if (RemoteAddresses != null) {
                 Console.WriteLine ("Count of Relayer: {0}", RemoteAddresses.Length);
@@ -174,7 +174,7 @@ namespace eagle.tunnel.dotnet.core {
                 lockOfIndex = new object ();
 
             } catch (KeyNotFoundException) {
-                Console.WriteLine ("Listen not found");
+                Console.WriteLine ("Warning: Listen not found");
             }
 
             if (allConf.ContainsKey ("socks")) {
