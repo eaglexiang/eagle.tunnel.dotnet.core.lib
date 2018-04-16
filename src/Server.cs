@@ -44,11 +44,16 @@ namespace eagle.tunnel.dotnet.core {
             Socket server = new Socket (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             bool done = false;
             do {
+                bool first = true;
                 try {
                     server.Bind (ipep);
                     done = true;
-                } catch {
-                    Thread.Sleep (60000); // wait for 60s to retry.
+                } catch(SocketException se) {
+                    if (first) {
+                        Console.WriteLine("bind warning: {0} -> {1}", ipep.ToString(), se.Message);
+                        first = false;
+                    }
+                    Thread.Sleep (20000); // wait for 20s to retry.
                 }
                 break;
             } while (done);
