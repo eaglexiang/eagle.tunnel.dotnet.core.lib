@@ -1,0 +1,14 @@
+digraph startgame {
+    rankdir=LR
+    ranksep=equally
+
+    st [label="Eagle Tuunel", shape=box, color=blue]
+
+    c1 -> st:w
+    c2 -> st:w
+    c3 -> st:w
+
+    st:e -> s1
+    st:e -> s2
+    st:e -> s3
+}
