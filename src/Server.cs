@@ -12,13 +12,29 @@ namespace eagle.tunnel.dotnet.core {
         private static Socket[] servers;
         private static IPEndPoint[] localAddresses;
         private static bool IsRunning { get; set; } // Server will keep running.
-        public static bool IsWorking { get; private set; } // Server has started working.
-        public static bool IsStopped { get; private set; }
+        // Server has started working.
+        public static bool IsWorking {
+            get {
+                bool result = false;
+                if (IsRunning) {
+                    if (servers != null) {
+                        foreach (Socket server in servers) {
+                            if (server == null) {
+                                continue;
+                            } else {
+                                result |= server.IsBound;
+                            }
+                        }
+                    }
+                }
+                return result;
+            }
+        }
 
-        public static void StartAsync(IPEndPoint[] localAddresses) {
-            Thread thread = new Thread(()=>Start(localAddresses));
+        public static void StartAsync (IPEndPoint[] localAddresses) {
+            Thread thread = new Thread (() => Start (localAddresses));
             thread.IsBackground = true;
-            thread.Start();
+            thread.Start ();
         }
 
         public static void Start (IPEndPoint[] localAddresses) {
@@ -28,7 +44,6 @@ namespace eagle.tunnel.dotnet.core {
                     servers = new Socket[localAddresses.Length];
                     Server.localAddresses = localAddresses;
                     IsRunning = true;
-                    IsStopped = false;
 
                     Thread threadLimitCheck = new Thread (LimitSpeed);
                     threadLimitCheck.IsBackground = true;
@@ -77,7 +92,6 @@ namespace eagle.tunnel.dotnet.core {
                     servers[ipepIndex] = server;
                 }
                 server.Listen (100);
-                IsWorking = true;
                 Console.WriteLine ("start to Listen: {0}",
                     server.LocalEndPoint.ToString ());
                 while (IsRunning) {
@@ -88,7 +102,11 @@ namespace eagle.tunnel.dotnet.core {
                         Console.WriteLine ("{0} -> {1}",
                             server.LocalEndPoint.ToString (), se.Message);
                         break;
-                    } catch(ObjectDisposedException) {;}
+                    } catch (ObjectDisposedException) {;
+                    } catch (Exception e) {
+                        Console.WriteLine ("error: unexpected exception: {0}",
+                            e.Message);
+                    }
                 }
             } else {
                 Console.WriteLine ("error: server created: {0}", ipep.ToString ());
@@ -161,9 +179,11 @@ namespace eagle.tunnel.dotnet.core {
                 // stop listening
                 lock (servers) {
                     foreach (Socket item in servers) {
-                        try {
-                            item.Close ();
-                        } catch {; }
+                        if (item != null) {
+                            try {
+                                item.Close ();
+                            } catch {; }
+                        }
                     }
                 }
                 // shut down all connections
@@ -173,8 +193,13 @@ namespace eagle.tunnel.dotnet.core {
                         tunnel2Close.Close ();
                     }
                 }
-                IsStopped = true;
             }
+        }
+
+        public static void CloseAsync () {
+            Thread thread = new Thread (Close);
+            thread.IsBackground = true;
+            thread.Start ();
         }
 
         public static string Version () {
