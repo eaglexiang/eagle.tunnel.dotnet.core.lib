@@ -13,6 +13,7 @@ namespace eagle.tunnel.dotnet.core {
         private static IPEndPoint[] localAddresses;
         private static bool IsRunning { get; set; } // Server will keep running.
         public static bool IsWorking { get; private set; } // Server has started working.
+        public static bool IsStopped { get; private set; }
 
         public static void Start (IPEndPoint[] localAddresses) {
             if (!IsRunning) {
@@ -21,6 +22,7 @@ namespace eagle.tunnel.dotnet.core {
                     servers = new Socket[localAddresses.Length];
                     Server.localAddresses = localAddresses;
                     IsRunning = true;
+                    IsStopped = false;
 
                     Thread threadLimitCheck = new Thread (LimitSpeed);
                     threadLimitCheck.IsBackground = true;
@@ -65,7 +67,9 @@ namespace eagle.tunnel.dotnet.core {
             IPEndPoint ipep = localAddresses[ipepIndex];
             Socket server = CreateServer (ipep);
             if (server != null) {
-                servers[ipepIndex] = server;
+                lock (servers) {
+                    servers[ipepIndex] = server;
+                }
                 server.Listen (100);
                 Console.WriteLine ("start to Listen: {0}",
                     server.LocalEndPoint.ToString ());
@@ -162,6 +166,7 @@ namespace eagle.tunnel.dotnet.core {
                         tunnel2Close.Close ();
                     }
                 }
+                IsStopped = true;
             }
         }
 
