@@ -15,6 +15,12 @@ namespace eagle.tunnel.dotnet.core {
         public static bool IsWorking { get; private set; } // Server has started working.
         public static bool IsStopped { get; private set; }
 
+        public static void StartAsync(IPEndPoint[] localAddresses) {
+            Thread thread = new Thread(()=>Start(localAddresses));
+            thread.IsBackground = true;
+            thread.Start();
+        }
+
         public static void Start (IPEndPoint[] localAddresses) {
             if (!IsRunning) {
                 if (localAddresses != null) {
