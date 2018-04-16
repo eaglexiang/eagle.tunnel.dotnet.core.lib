@@ -52,7 +52,7 @@ namespace eagle.tunnel.dotnet.core {
                         }
                         Thread.Sleep (20000); // wait for 20s to retry.
                     }
-                } while (!server.IsBound);
+                } while (!server.IsBound && IsRunning);
             }
             return server;
         }
@@ -71,6 +71,7 @@ namespace eagle.tunnel.dotnet.core {
                     servers[ipepIndex] = server;
                 }
                 server.Listen (100);
+                IsWorking = true;
                 Console.WriteLine ("start to Listen: {0}",
                     server.LocalEndPoint.ToString ());
                 while (IsRunning) {
