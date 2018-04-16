@@ -88,7 +88,7 @@ namespace eagle.tunnel.dotnet.core {
                         Console.WriteLine ("{0} -> {1}",
                             server.LocalEndPoint.ToString (), se.Message);
                         break;
-                    }
+                    } catch(ObjectDisposedException) {;}
                 }
             } else {
                 Console.WriteLine ("error: server created: {0}", ipep.ToString ());
