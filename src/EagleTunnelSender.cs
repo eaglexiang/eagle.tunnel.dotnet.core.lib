@@ -81,9 +81,8 @@ namespace eagle.tunnel.dotnet.core {
             } else {
                 result = true;
             }
-            if(result)
-            {
-                Conf.LocalUser.AddTunnel(tunnel);
+            if (result) {
+                Conf.LocalUser.AddTunnel (tunnel);
             }
             return result;
         }
@@ -111,8 +110,10 @@ namespace eagle.tunnel.dotnet.core {
                                 }
                             }
                         }
-                        DnsCache cache = new DnsCache(e.Domain, e.IP, Conf.DnsCacheTti);
-                        dnsCaches.TryAdd(cache.Domain, cache);
+                        if (e.IP != null) {
+                            DnsCache cache = new DnsCache (e.Domain, e.IP, Conf.DnsCacheTti);
+                            dnsCaches.TryAdd (cache.Domain, cache);
+                        }
                     }
                 }
             }
