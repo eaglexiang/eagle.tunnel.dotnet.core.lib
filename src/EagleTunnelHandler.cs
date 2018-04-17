@@ -11,8 +11,8 @@ namespace eagle.tunnel.dotnet.core {
             Unknown
         }
 
-        private static ConcurrentDictionary<string, string> dnsCache =
-            new ConcurrentDictionary<string, string> ();
+        private static ConcurrentDictionary<string, DnsCache> dnsCaches =
+            new ConcurrentDictionary<string, DnsCache> ();
 
         public static Tunnel Handle (string firstMsg, Socket socket2Client) {
             Tunnel result = null;
@@ -109,14 +109,21 @@ namespace eagle.tunnel.dotnet.core {
                 string[] args = msg.Split (' ');
                 if (args.Length >= 2) {
                     string domain = args[1];
-                    string ip;
-                    if (dnsCache.ContainsKey (domain)) {
-                        ip = dnsCache[domain];
+                    string ip = "nok";
+                    if (dnsCaches.ContainsKey (domain) && !dnsCaches[domain].IsDead) {
+                        ip = dnsCaches[domain].IP.ToString ();
                     } else {
-                        ip = ResolvDNS (domain);
-                        try {
-                            dnsCache.TryAdd (domain, ip);
-                        } catch {; }
+                        string _ip = ResolvDNS (domain);
+                        if (IPAddress.TryParse (_ip, out IPAddress ipa)) {
+                            DnsCache cache = new DnsCache (domain, ipa, Conf.DnsCacheTti);
+                            if (dnsCaches.ContainsKey (domain)) {
+                                dnsCaches[domain] = cache;
+                            } else {
+                                if (dnsCaches.TryAdd (domain, cache)) {
+                                    ip = _ip;
+                                }
+                            }
+                        }
                     }
                     tunnel.WriteL (ip);
                 }

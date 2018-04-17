@@ -5,8 +5,8 @@ using System.Text;
 
 namespace eagle.tunnel.dotnet.core {
     public class EagleTunnelSender {
-        private static ConcurrentDictionary<string, IPAddress> dnsCache =
-            new ConcurrentDictionary<string, IPAddress> ();
+        private static ConcurrentDictionary<string, DnsCache> dnsCaches =
+            new ConcurrentDictionary<string, DnsCache> ();
 
         public static Tunnel Handle (EagleTunnelHandler.EagleTunnelRequestType type, EagleTunnelArgs e) {
             Tunnel result = null;
@@ -92,8 +92,8 @@ namespace eagle.tunnel.dotnet.core {
             if (tunnel != null && e != null) {
                 e.IP = null;
                 if (e.Domain != null) {
-                    if (dnsCache.ContainsKey (e.Domain)) {
-                        e.IP = dnsCache[e.Domain];
+                    if (dnsCaches.ContainsKey (e.Domain) && !dnsCaches[e.Domain].IsDead) {
+                        e.IP = dnsCaches[e.Domain].IP;
                     } else {
                         if (IPAddress.TryParse (e.Domain, out IPAddress ip0)) {;
                             // e.Domain is IP but not domain
@@ -111,9 +111,8 @@ namespace eagle.tunnel.dotnet.core {
                                 }
                             }
                         }
-                        try {
-                            dnsCache.TryAdd (e.Domain, e.IP);
-                        } catch {; }
+                        DnsCache cache = new DnsCache(e.Domain, e.IP, Conf.DnsCacheTti);
+                        dnsCaches.TryAdd(cache.Domain, cache);
                     }
                 }
             }
