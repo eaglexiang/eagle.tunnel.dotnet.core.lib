@@ -7,7 +7,7 @@ using System.Threading;
 namespace eagle.tunnel.dotnet.core {
     public class Pipe {
         public string UserFrom { get; set; }
-        public long BytesTransferred {get; private set;}
+        public long BytesTransferred { get; private set; }
         public Socket SocketFrom { get; set; }
         public Socket SocketTo { get; set; }
         public bool EncryptFrom { get; set; }
@@ -15,7 +15,7 @@ namespace eagle.tunnel.dotnet.core {
         private static byte EncryptionKey = 0x22;
         private byte[] bufferRead;
         public bool IsRunning { get; private set; }
-        public bool IsWaiting { get; set; }
+        public object IsWaiting { get; set; }
 
         public Pipe (Socket from = null, Socket to = null, string user = null) {
             SocketFrom = from;
@@ -97,9 +97,11 @@ namespace eagle.tunnel.dotnet.core {
 
         // wait for speed limit
         private void Wait () {
-            if (IsWaiting) {
-                Thread.Sleep (5000);
-                IsWaiting = false;
+            if (IsWaiting != null) {
+                bool IsWaiting = (bool) this.IsWaiting;
+                while (IsWaiting) {
+                    Thread.Sleep (1000);
+                }
             }
         }
 

@@ -80,44 +80,42 @@ namespace eagle.tunnel.dotnet.core {
 
         public static IPAddress GetIP (byte[] request) {
             IPAddress ip;
-            try {
-                int destype = request[3];
-                string ip_str;
-                switch (destype) {
-                    case 1:
-                        ip_str = request[4].ToString ();
-                        ip_str += '.' + request[5].ToString ();
-                        ip_str += '.' + request[6].ToString ();
-                        ip_str += '.' + request[7].ToString ();
-                        if (IPAddress.TryParse (ip_str, out IPAddress ipa0)) {
-                            ip = ipa0;
-                        } else {
-                            ip = null;
-                        }
-                        break;
-                    case 3:
-                        int len = request[4];
-                        char[] hostChars = new char[len];
-                        for (int i = 0; i < len; ++i) {
-                            hostChars[i] = (char) request[5 + i];
-                        }
-                        string host = new string (hostChars);
-                        // if host is real ip but not domain name
-                        if (IPAddress.TryParse (host, out IPAddress ipa1)) {
-                            ip = ipa1;
-                        } else {
-                            EagleTunnelArgs e = new EagleTunnelArgs ();
-                            e.Domain = host;
-                            EagleTunnelSender.Handle (
-                                EagleTunnelHandler.EagleTunnelRequestType.DNS, e);
-                            ip = e.IP;
-                        }
-                        break;
-                    default:
+            int destype = request[3];
+            string ip_str;
+            switch (destype) {
+                case 1:
+                    ip_str = request[4].ToString ();
+                    ip_str += '.' + request[5].ToString ();
+                    ip_str += '.' + request[6].ToString ();
+                    ip_str += '.' + request[7].ToString ();
+                    if (IPAddress.TryParse (ip_str, out IPAddress ipa0)) {
+                        ip = ipa0;
+                    } else {
                         ip = null;
-                        break;
-                }
-            } catch { ip = null; }
+                    }
+                    break;
+                case 3:
+                    int len = request[4];
+                    char[] hostChars = new char[len];
+                    for (int i = 0; i < len; ++i) {
+                        hostChars[i] = (char) request[5 + i];
+                    }
+                    string host = new string (hostChars);
+                    // if host is real ip but not domain name
+                    if (IPAddress.TryParse (host, out IPAddress ipa1)) {
+                        ip = ipa1;
+                    } else {
+                        EagleTunnelArgs e = new EagleTunnelArgs ();
+                        e.Domain = host;
+                        EagleTunnelSender.Handle (
+                            EagleTunnelHandler.EagleTunnelRequestType.DNS, e);
+                        ip = e.IP;
+                    }
+                    break;
+                default:
+                    ip = null;
+                    break;
+            }
             return ip;
         }
 

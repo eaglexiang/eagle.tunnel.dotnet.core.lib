@@ -6,7 +6,7 @@ namespace eagle.tunnel.dotnet.core {
         private Pipe pipeR2L; // pipe from Right socket to Left socket
         private System.DateTime timeCreated;
 
-        public bool IsWaiting {
+        public object IsWaiting {
             get {
                 return pipeL2R.IsWaiting;
             }

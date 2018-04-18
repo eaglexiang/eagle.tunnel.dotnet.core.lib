@@ -8,7 +8,7 @@ namespace eagle.tunnel.dotnet.core {
         private static ConcurrentDictionary<string, DnsCache> dnsCaches =
             new ConcurrentDictionary<string, DnsCache> ();
 
-        private static Tunnel CreateTunnel (int retryTimes = 1) {
+        private static Tunnel CreateTunnel (int retryTimes = 3) {
             Tunnel result = null;
             if (retryTimes > 0) {
                 Socket socket2Server = new Socket (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
