@@ -91,32 +91,40 @@ namespace eagle.tunnel.dotnet.core {
             if (tunnel != null && e != null) {
                 e.IP = null;
                 if (e.Domain != null) {
-                    if (dnsCaches.ContainsKey (e.Domain) && !dnsCaches[e.Domain].IsDead) {
-                        e.IP = dnsCaches[e.Domain].IP;
-                    } else {
-                        if (IPAddress.TryParse (e.Domain, out IPAddress ip0)) {;
-                            // e.Domain is IP but not domain
-                            e.IP = ip0;
+                    if (dnsCaches.ContainsKey (e.Domain)) {
+                        if (!dnsCaches[e.Domain].IsDead) {
+                            e.IP = dnsCaches[e.Domain].IP;
                         } else {
-                            string req = EagleTunnelHandler.EagleTunnelRequestType.DNS.ToString ();
-                            req += " " + e.Domain;
-                            bool done = tunnel.WriteR (req);
-                            if (done) {
-                                string reply = tunnel.ReadStringR ();
-                                if (!string.IsNullOrEmpty (reply) && reply != "nok") {
-                                    if (IPAddress.TryParse (reply, out IPAddress ip1)) {
-                                        e.IP = ip1;
-                                    }
-                                }
+                            e.IP = ResolvDomain (tunnel, e.Domain);
+                            if (e.IP != null) {
+                                dnsCaches[e.Domain].IP = e.IP;
                             }
                         }
-                        if (e.IP != null) {
-                            DnsCache cache = new DnsCache (e.Domain, e.IP, Conf.DnsCacheTti);
-                            dnsCaches.TryAdd (cache.Domain, cache);
+                    } else {
+                        e.IP = ResolvDomain(tunnel, e.Domain);
+                        if (e.IP != null){
+                            DnsCache cache = new DnsCache(e.Domain, e.IP, Conf.DnsCacheTti);
+                            dnsCaches.TryAdd(e.Domain, cache);
                         }
                     }
                 }
             }
+        }
+
+        private static IPAddress ResolvDomain (Tunnel tunnel, string domain) {
+            IPAddress result = null;
+            string req = EagleTunnelHandler.EagleTunnelRequestType.DNS.ToString ();
+            req += " " + domain;
+            bool done = tunnel.WriteR (req);
+            if (done) {
+                string reply = tunnel.ReadStringR ();
+                if (!string.IsNullOrEmpty (reply) && reply != "nok") {
+                    if (IPAddress.TryParse (reply, out IPAddress ip1)) {
+                        result = ip1;
+                    }
+                }
+            }
+            return result;
         }
 
         private static bool TCPReqSender (Tunnel tunnel, EagleTunnelArgs e) {
