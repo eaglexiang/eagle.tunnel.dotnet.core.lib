@@ -23,11 +23,11 @@ namespace eagle.tunnel.dotnet.core {
                     if (done) {
                         switch (type) {
                             case EagleTunnelHandler.EagleTunnelRequestType.DNS:
-                                DNSReqSender (tunnel, e);
+                                SendDNSReq (tunnel, e);
                                 done = false; // no need to continue;
                                 break;
                             case EagleTunnelHandler.EagleTunnelRequestType.TCP:
-                                done = TCPReqSender (tunnel, e);
+                                done = SendTCPReq (tunnel, e);
                                 break;
                         }
                     }
@@ -87,7 +87,7 @@ namespace eagle.tunnel.dotnet.core {
             return result;
         }
 
-        private static void DNSReqSender (Tunnel tunnel, EagleTunnelArgs e) {
+        private static void SendDNSReq (Tunnel tunnel, EagleTunnelArgs e) {
             if (tunnel != null && e != null) {
                 e.IP = null;
                 if (e.Domain != null) {
@@ -101,10 +101,10 @@ namespace eagle.tunnel.dotnet.core {
                             }
                         }
                     } else {
-                        e.IP = ResolvDomain(tunnel, e.Domain);
-                        if (e.IP != null){
-                            DnsCache cache = new DnsCache(e.Domain, e.IP, Conf.DnsCacheTti);
-                            dnsCaches.TryAdd(e.Domain, cache);
+                        e.IP = ResolvDomain (tunnel, e.Domain);
+                        if (e.IP != null) {
+                            DnsCache cache = new DnsCache (e.Domain, e.IP, Conf.DnsCacheTti);
+                            dnsCaches.TryAdd (e.Domain, cache);
                         }
                     }
                 }
@@ -127,7 +127,7 @@ namespace eagle.tunnel.dotnet.core {
             return result;
         }
 
-        private static bool TCPReqSender (Tunnel tunnel, EagleTunnelArgs e) {
+        private static bool SendTCPReq (Tunnel tunnel, EagleTunnelArgs e) {
             bool result = false;
             if (tunnel != null && e != null) {
                 if (e.EndPoint != null) {
