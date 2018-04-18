@@ -61,7 +61,7 @@ namespace eagle.tunnel.dotnet.core {
                     foreach (Tunnel item in tunnels) {
                         if (item.IsWorking) {
                             newTunnels.Add (item);
-                            speed += item.Speed();
+                            speed += item.Speed () / 1024;
                         }
                     }
                     tunnels = newTunnels;
@@ -73,10 +73,10 @@ namespace eagle.tunnel.dotnet.core {
             return speed;
         }
 
-        public void LimitSpeedAsync() {
-            System.Threading.Thread thread = new System.Threading.Thread(LimitSpeed);
+        public void LimitSpeedAsync () {
+            System.Threading.Thread thread = new System.Threading.Thread (LimitSpeed);
             thread.IsBackground = true;
-            thread.Start();
+            thread.Start ();
         }
 
         public void LimitSpeed () {
