@@ -164,7 +164,7 @@ namespace eagle.tunnel.dotnet.core {
                 if (Conf.allConf["speed-check"][0] == "on") {
                     while (IsRunning) {
                         foreach (EagleTunnelUser item in Conf.Users.Values) {
-                            item.LimitSpeed ();
+                            item.LimitSpeedAsync();
                         }
                         Thread.Sleep (5000);
                     }
