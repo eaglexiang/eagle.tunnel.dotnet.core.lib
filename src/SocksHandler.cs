@@ -79,7 +79,7 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         public static IPAddress GetIP (byte[] request) {
-            IPAddress ip = null;
+            IPAddress ip;
             try {
                 int destype = request[3];
                 string ip_str;
@@ -91,6 +91,8 @@ namespace eagle.tunnel.dotnet.core {
                         ip_str += '.' + request[7].ToString ();
                         if (IPAddress.TryParse (ip_str, out IPAddress ipa0)) {
                             ip = ipa0;
+                        } else {
+                            ip = null;
                         }
                         break;
                     case 3:
@@ -110,6 +112,9 @@ namespace eagle.tunnel.dotnet.core {
                                 EagleTunnelHandler.EagleTunnelRequestType.DNS, e);
                             ip = e.IP;
                         }
+                        break;
+                    default:
+                        ip = null;
                         break;
                 }
             } catch { ip = null; }

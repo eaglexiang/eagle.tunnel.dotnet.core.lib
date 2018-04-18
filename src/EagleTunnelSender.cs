@@ -8,34 +8,44 @@ namespace eagle.tunnel.dotnet.core {
         private static ConcurrentDictionary<string, DnsCache> dnsCaches =
             new ConcurrentDictionary<string, DnsCache> ();
 
+        private static Tunnel CreateTunnel (int retryTimes = 1) {
+            Tunnel result = null;
+            if (retryTimes > 0) {
+                Socket socket2Server = new Socket (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                IPEndPoint ipeOfServer = Conf.GetRemoteIPEndPoint ();
+                try {
+                    socket2Server.Connect (ipeOfServer);
+                } catch { socket2Server = null; }
+                if (socket2Server != null) {
+                    Tunnel tunnel = CheckVersion (socket2Server);
+                    if (CheckUser (tunnel)) {
+                        result = tunnel;
+                    } else {
+                        try {
+                            socket2Server.Shutdown (SocketShutdown.Both);
+                            System.Threading.Thread.Sleep (10);
+                            socket2Server.Close ();
+                        } catch (SocketException) {; }
+                    }
+                }
+                if (result == null) {
+                    result = CreateTunnel (--retryTimes);
+                }
+            }
+            return result;
+        }
+
         public static Tunnel Handle (EagleTunnelHandler.EagleTunnelRequestType type, EagleTunnelArgs e) {
             Tunnel result = null;
             if (type != EagleTunnelHandler.EagleTunnelRequestType.Unknown &&
                 e != null) {
-                IPEndPoint ipeOfServer = Conf.GetRemoteIPEndPoint ();
-                Socket socket2Server = new Socket (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                try {
-                    socket2Server.Connect (ipeOfServer);
-                } catch { socket2Server = null; }
-                Tunnel tunnel = CheckVersion (socket2Server);
-                if (tunnel != null) {
-                    bool done = CheckUser (tunnel);
-                    if (done) {
-                        switch (type) {
-                            case EagleTunnelHandler.EagleTunnelRequestType.DNS:
-                                SendDNSReq (tunnel, e);
-                                done = false; // no need to continue;
-                                break;
-                            case EagleTunnelHandler.EagleTunnelRequestType.TCP:
-                                done = SendTCPReq (tunnel, e);
-                                break;
-                        }
-                    }
-                    if (done) {
-                        result = tunnel;
-                    } else {
-                        tunnel.Close ();
-                    }
+                switch (type) {
+                    case EagleTunnelHandler.EagleTunnelRequestType.DNS:
+                        SendDNSReq (e);
+                        break;
+                    case EagleTunnelHandler.EagleTunnelRequestType.TCP:
+                        SendTCPReq (out result, e);
+                        break;
                 }
             }
             return result;
@@ -87,21 +97,21 @@ namespace eagle.tunnel.dotnet.core {
             return result;
         }
 
-        private static void SendDNSReq (Tunnel tunnel, EagleTunnelArgs e) {
-            if (tunnel != null && e != null) {
+        private static void SendDNSReq (EagleTunnelArgs e) {
+            if (e != null) {
                 e.IP = null;
                 if (e.Domain != null) {
                     if (dnsCaches.ContainsKey (e.Domain)) {
                         if (!dnsCaches[e.Domain].IsDead) {
                             e.IP = dnsCaches[e.Domain].IP;
                         } else {
-                            e.IP = ResolvDomain (tunnel, e.Domain);
+                            e.IP = ResolvDomain (e.Domain);
                             if (e.IP != null) {
                                 dnsCaches[e.Domain].IP = e.IP;
                             }
                         }
                     } else {
-                        e.IP = ResolvDomain (tunnel, e.Domain);
+                        e.IP = ResolvDomain (e.Domain);
                         if (e.IP != null) {
                             DnsCache cache = new DnsCache (e.Domain, e.IP, Conf.DnsCacheTti);
                             dnsCaches.TryAdd (e.Domain, cache);
@@ -111,37 +121,43 @@ namespace eagle.tunnel.dotnet.core {
             }
         }
 
-        private static IPAddress ResolvDomain (Tunnel tunnel, string domain) {
+        private static IPAddress ResolvDomain (string domain) {
             IPAddress result = null;
-            string req = EagleTunnelHandler.EagleTunnelRequestType.DNS.ToString ();
-            req += " " + domain;
-            bool done = tunnel.WriteR (req);
-            if (done) {
-                string reply = tunnel.ReadStringR ();
-                if (!string.IsNullOrEmpty (reply) && reply != "nok") {
-                    if (IPAddress.TryParse (reply, out IPAddress ip1)) {
-                        result = ip1;
+            Tunnel tunnel = CreateTunnel ();
+            if (tunnel != null) {
+                string req = EagleTunnelHandler.EagleTunnelRequestType.DNS.ToString ();
+                req += " " + domain;
+                bool done = tunnel.WriteR (req);
+                if (done) {
+                    string reply = tunnel.ReadStringR ();
+                    if (!string.IsNullOrEmpty (reply) && reply != "nok") {
+                        if (IPAddress.TryParse (reply, out IPAddress ip1)) {
+                            result = ip1;
+                        }
                     }
                 }
             }
             return result;
         }
 
-        private static bool SendTCPReq (Tunnel tunnel, EagleTunnelArgs e) {
-            bool result = false;
-            if (tunnel != null && e != null) {
-                if (e.EndPoint != null) {
+        private static void SendTCPReq (out Tunnel tunnel, EagleTunnelArgs e) {
+            tunnel = null;
+            if (e != null && e.EndPoint != null) {
+                tunnel = CreateTunnel ();
+                if (tunnel != null) {
                     string req = EagleTunnelHandler.EagleTunnelRequestType.TCP.ToString ();
                     req += ' ' + e.EndPoint.Address.ToString ();
                     req += ' ' + e.EndPoint.Port.ToString ();
                     bool done = tunnel.WriteR (req);
                     if (done) {
                         string reply = tunnel.ReadStringR ();
-                        result = reply == "ok";
+                        if (reply != "ok") {
+                            tunnel.Close ();
+                            tunnel = null;
+                        }
                     }
                 }
             }
-            return result;
         }
     }
 }
