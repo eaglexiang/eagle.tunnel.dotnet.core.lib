@@ -61,13 +61,17 @@ namespace eagle.tunnel.dotnet.core {
                     foreach (Tunnel item in tunnels) {
                         if (item.IsWorking) {
                             newTunnels.Add (item);
-                            speed += item.Speed () / 1024;
                         }
                     }
                     tunnels = newTunnels;
                     if (tunnels.Count > tunnelsGCThresshold) {
                         tunnelsGCThresshold *= 2;
                     }
+                }
+                // get speed
+                foreach (Tunnel item in tunnels)
+                {
+                    speed += item.Speed () / 1024;
                 }
             }
             return speed;
