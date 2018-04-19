@@ -29,7 +29,9 @@ namespace eagle.tunnel.dotnet.core {
                     }
                 }
                 if (result == null) {
-                    result = CreateTunnel (--retryTimes);
+                    try {
+                        result = CreateTunnel (--retryTimes);
+                    } catch (System.StackOverflowException) {; }
                 }
             }
             return result;
@@ -141,7 +143,9 @@ namespace eagle.tunnel.dotnet.core {
                 }
             }
             if (result == null) {
-                result = ResolvDomain (domain, --retryTimes);
+                try {
+                    result = ResolvDomain (domain, --retryTimes);
+                } catch (System.StackOverflowException) {; }
             }
             return result;
         }

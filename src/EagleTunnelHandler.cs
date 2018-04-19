@@ -130,10 +130,10 @@ namespace eagle.tunnel.dotnet.core {
                     if (ip == null) {
                         reply = "nok";
                     } else {
-                        reply = ip.ToString();
+                        reply = ip.ToString ();
                     }
-                    tunnel.WriteL(reply);
-                    tunnel.Close();
+                    tunnel.WriteL (reply);
+                    tunnel.Close ();
                 }
             }
         }
@@ -153,7 +153,9 @@ namespace eagle.tunnel.dotnet.core {
                 }
             }
             if (result == null) {
-                result = ResolvDNS (url, --retryTimes);
+                try {
+                    result = ResolvDNS (url, --retryTimes);
+                } catch (System.StackOverflowException) {; }
             }
             return result;
         }
