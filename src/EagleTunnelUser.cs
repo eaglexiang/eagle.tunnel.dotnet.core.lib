@@ -69,9 +69,8 @@ namespace eagle.tunnel.dotnet.core {
                     }
                 }
                 // get speed
-                foreach (Tunnel item in tunnels)
-                {
-                    speed += item.Speed () / 1024;
+                foreach (Tunnel item in tunnels) {
+                    speed += (item.Speed () / 1024);
                 }
             }
             return speed;
