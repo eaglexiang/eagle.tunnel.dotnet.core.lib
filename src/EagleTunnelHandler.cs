@@ -151,11 +151,9 @@ namespace eagle.tunnel.dotnet.core {
                         break;
                     }
                 }
-            }
-            if (result == null) {
-                try {
+                if (result == null) {
                     result = ResolvDNS (url, --retryTimes);
-                } catch (System.StackOverflowException) {; }
+                }
             }
             return result;
         }
