@@ -7,7 +7,8 @@ using System.Threading;
 namespace eagle.tunnel.dotnet.core {
     public class Pipe {
         public string UserFrom { get; set; }
-        public long BytesTransferred { get; private set; }
+        private long bytesTransferred;
+        private long bytesLastChecked;
         public Socket SocketFrom { get; set; }
         public Socket SocketTo { get; set; }
         public bool EncryptFrom { get; set; }
@@ -16,6 +17,7 @@ namespace eagle.tunnel.dotnet.core {
         private byte[] bufferRead;
         public bool IsRunning { get; private set; }
         public object IsWaiting { get; set; }
+        private DateTime timeLastChecked;
 
         public Pipe (Socket from = null, Socket to = null, string user = null) {
             SocketFrom = from;
@@ -24,9 +26,11 @@ namespace eagle.tunnel.dotnet.core {
             EncryptTo = false;
 
             UserFrom = user;
-            BytesTransferred = 0;
+            bytesTransferred = 0;
+            bytesLastChecked = 0;
             bufferRead = new byte[1024];
             IsRunning = false;
+            timeLastChecked = DateTime.Now;
         }
 
         public bool Write (byte[] buffer, int offset, int count) {
@@ -88,7 +92,7 @@ namespace eagle.tunnel.dotnet.core {
                         tmpBuffer = Decrypt (tmpBuffer);
                     }
                     result = tmpBuffer;
-                    BytesTransferred += count;
+                    bytesTransferred += count;
                     Wait ();
                 }
             }
@@ -170,6 +174,17 @@ namespace eagle.tunnel.dotnet.core {
                 }
                 SocketTo = null;
             }
+        }
+
+        public double Speed () {
+            DateTime timeNow = DateTime.Now;
+            long bytesNow = bytesTransferred;
+            double seconds = (timeNow - timeLastChecked).TotalSeconds;
+            long bytes = bytesNow - bytesLastChecked;
+            double speed = bytes / seconds;
+            bytesLastChecked = bytesNow;
+            timeLastChecked = timeNow;
+            return speed;
         }
     }
 }

@@ -16,16 +16,8 @@ namespace eagle.tunnel.dotnet.core {
             }
         }
 
-        private long BytesTransferred {
-            get {
-                long result = pipeL2R.BytesTransferred + pipeR2L.BytesTransferred;
-                return result;
-            }
-        }
-
         public double Speed () {
-            double seconds = (System.DateTime.Now - timeCreated).TotalSeconds;
-            double speed = BytesTransferred / seconds;
+            double speed = pipeL2R.Speed() + pipeR2L.Speed();
             return speed;
         }
 
