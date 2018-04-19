@@ -109,39 +109,53 @@ namespace eagle.tunnel.dotnet.core {
                 string[] args = msg.Split (' ');
                 if (args.Length >= 2) {
                     string domain = args[1];
-                    string ip = "nok";
-                    if (dnsCaches.ContainsKey (domain) && !dnsCaches[domain].IsDead) {
-                        ip = dnsCaches[domain].IP.ToString ();
-                    } else {
-                        string _ip = ResolvDNS (domain);
-                        if (IPAddress.TryParse (_ip, out IPAddress ipa)) {
-                            DnsCache cache = new DnsCache (domain, ipa, Conf.DnsCacheTti);
-                            if (dnsCaches.ContainsKey (domain)) {
-                                dnsCaches[domain] = cache;
-                            } else {
-                                if (dnsCaches.TryAdd (domain, cache)) {
-                                    ip = _ip;
-                                }
+                    IPAddress ip;
+                    if (dnsCaches.ContainsKey (domain)) {
+                        if (!dnsCaches[domain].IsDead) {
+                            ip = dnsCaches[domain].IP;
+                        } else {
+                            ip = ResolvDNS (domain);
+                            if (ip != null) {
+                                dnsCaches[domain].IP = ip;
                             }
                         }
+                    } else {
+                        ip = ResolvDNS (domain);
+                        if (ip != null) {
+                            DnsCache cache = new DnsCache (domain, ip, Conf.DnsCacheTti);
+                            dnsCaches.TryAdd (cache.Domain, cache);
+                        }
                     }
-                    tunnel.WriteL (ip);
+                    string reply;
+                    if (ip == null) {
+                        reply = "nok";
+                    } else {
+                        reply = ip.ToString();
+                    }
+                    tunnel.WriteL(reply);
+                    tunnel.Close();
                 }
             }
         }
 
-        private static string ResolvDNS (string url) {
-            IPHostEntry iphe;
-            try {
-                iphe = Dns.GetHostEntry (url);
-            } catch { return null; }
-            IPAddress ipa = null;
-            foreach (IPAddress tmp in iphe.AddressList) {
-                if (tmp.AddressFamily == AddressFamily.InterNetwork) {
-                    ipa = tmp;
+        private static IPAddress ResolvDNS (string url, int retryTimes = 3) {
+            IPAddress result = null;
+            if (retryTimes > 0) {
+                IPHostEntry iphe;
+                try {
+                    iphe = Dns.GetHostEntry (url);
+                } catch { iphe = null; }
+                foreach (IPAddress tmp in iphe.AddressList) {
+                    if (tmp.AddressFamily == AddressFamily.InterNetwork) {
+                        result = tmp;
+                        break;
+                    }
                 }
             }
-            return ipa != null ? ipa.ToString () : "nok";
+            if (result == null) {
+                result = ResolvDNS (url, --retryTimes);
+            }
+            return result;
         }
 
         private static bool TCPReqHandle (string msg, Tunnel tunnel) {

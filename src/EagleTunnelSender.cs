@@ -121,22 +121,27 @@ namespace eagle.tunnel.dotnet.core {
             }
         }
 
-        private static IPAddress ResolvDomain (string domain) {
+        private static IPAddress ResolvDomain (string domain, int retryTimes = 3) {
             IPAddress result = null;
-            Tunnel tunnel = CreateTunnel ();
-            if (tunnel != null) {
-                string req = EagleTunnelHandler.EagleTunnelRequestType.DNS.ToString ();
-                req += " " + domain;
-                bool done = tunnel.WriteR (req);
-                if (done) {
-                    string reply = tunnel.ReadStringR ();
-                    if (!string.IsNullOrEmpty (reply) && reply != "nok") {
-                        if (IPAddress.TryParse (reply, out IPAddress ip)) {
-                            result = ip;
+            if (retryTimes > 0) {
+                Tunnel tunnel = CreateTunnel ();
+                if (tunnel != null) {
+                    string req = EagleTunnelHandler.EagleTunnelRequestType.DNS.ToString ();
+                    req += " " + domain;
+                    bool done = tunnel.WriteR (req);
+                    if (done) {
+                        string reply = tunnel.ReadStringR ();
+                        if (!string.IsNullOrEmpty (reply) && reply != "nok") {
+                            if (IPAddress.TryParse (reply, out IPAddress ip)) {
+                                result = ip;
+                            }
                         }
                     }
+                    tunnel.Close ();
                 }
-                tunnel.Close();
+            }
+            if (result == null) {
+                result = ResolvDomain (domain, --retryTimes);
             }
             return result;
         }

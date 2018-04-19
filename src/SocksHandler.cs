@@ -102,8 +102,8 @@ namespace eagle.tunnel.dotnet.core {
                     }
                     string host = new string (hostChars);
                     // if host is real ip but not domain name
-                    if (IPAddress.TryParse (host, out IPAddress ipa1)) {
-                        ip = ipa1;
+                    if (IPAddress.TryParse (host, out IPAddress ipa)) {
+                        ip = ipa;
                     } else {
                         EagleTunnelArgs e = new EagleTunnelArgs ();
                         e.Domain = host;
