@@ -8,30 +8,32 @@ namespace eagle.tunnel.dotnet.core {
         private static ConcurrentDictionary<string, DnsCache> dnsCaches =
             new ConcurrentDictionary<string, DnsCache> ();
 
-        private static Tunnel CreateTunnel (int retryTimes = 3) {
+        private static Tunnel CreateTunnel () {
             Tunnel result = null;
-            if (retryTimes > 0) {
-                Socket socket2Server = new Socket (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                IPEndPoint ipeOfServer = Conf.GetRemoteIPEndPoint ();
-                try {
-                    socket2Server.Connect (ipeOfServer);
-                } catch { socket2Server = null; }
-                if (socket2Server != null) {
-                    Tunnel tunnel = CheckVersion (socket2Server);
-                    if (CheckUser (tunnel)) {
-                        result = tunnel;
-                    } else {
-                        try {
-                            socket2Server.Shutdown (SocketShutdown.Both);
-                            System.Threading.Thread.Sleep (10);
-                            socket2Server.Close ();
-                        } catch (SocketException) {; }
-                    }
-                }
-                if (result == null) {
+            int times = 3;
+            while (result == null && times-- > 0) {
+                result = _CreateTunnel ();
+            }
+            return result;
+        }
+
+        private static Tunnel _CreateTunnel () {
+            Tunnel result = null;
+            Socket socket2Server = new Socket (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            IPEndPoint ipeOfServer = Conf.GetRemoteIPEndPoint ();
+            try {
+                socket2Server.Connect (ipeOfServer);
+            } catch { socket2Server = null; }
+            if (socket2Server != null) {
+                Tunnel tunnel = CheckVersion (socket2Server);
+                if (CheckUser (tunnel)) {
+                    result = tunnel;
+                } else {
                     try {
-                        result = CreateTunnel (--retryTimes);
-                    } catch (System.StackOverflowException) {; }
+                        socket2Server.Shutdown (SocketShutdown.Both);
+                        System.Threading.Thread.Sleep (10);
+                        socket2Server.Close ();
+                    } catch (SocketException) {; }
                 }
             }
             return result;
@@ -123,29 +125,31 @@ namespace eagle.tunnel.dotnet.core {
             }
         }
 
-        private static IPAddress ResolvDomain (string domain, int retryTimes = 3) {
+        private static IPAddress ResolvDomain (string domain) {
             IPAddress result = null;
-            if (retryTimes > 0) {
-                Tunnel tunnel = CreateTunnel ();
-                if (tunnel != null) {
-                    string req = EagleTunnelHandler.EagleTunnelRequestType.DNS.ToString ();
-                    req += " " + domain;
-                    bool done = tunnel.WriteR (req);
-                    if (done) {
-                        string reply = tunnel.ReadStringR ();
-                        if (!string.IsNullOrEmpty (reply) && reply != "nok") {
-                            if (IPAddress.TryParse (reply, out IPAddress ip)) {
-                                result = ip;
-                            }
+            int times = 3;
+            while (result == null && times-- > 0) {
+                result = _ResolvDomain (domain);
+            }
+            return result;
+        }
+
+        private static IPAddress _ResolvDomain (string domain) {
+            IPAddress result = null;
+            Tunnel tunnel = CreateTunnel ();
+            if (tunnel != null) {
+                string req = EagleTunnelHandler.EagleTunnelRequestType.DNS.ToString ();
+                req += " " + domain;
+                bool done = tunnel.WriteR (req);
+                if (done) {
+                    string reply = tunnel.ReadStringR ();
+                    if (!string.IsNullOrEmpty (reply) && reply != "nok") {
+                        if (IPAddress.TryParse (reply, out IPAddress ip)) {
+                            result = ip;
                         }
                     }
-                    tunnel.Close ();
                 }
-            }
-            if (result == null) {
-                try {
-                    result = ResolvDomain (domain, --retryTimes);
-                } catch (System.StackOverflowException) {; }
+                tunnel.Close ();
             }
             return result;
         }

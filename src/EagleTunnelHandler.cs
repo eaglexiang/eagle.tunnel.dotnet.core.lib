@@ -138,24 +138,17 @@ namespace eagle.tunnel.dotnet.core {
             }
         }
 
-        private static IPAddress ResolvDNS (string url, int retryTimes = 3) {
+        private static IPAddress ResolvDNS (string url) {
             IPAddress result = null;
-            if (retryTimes > 0) {
-                IPHostEntry iphe;
-                try {
-                    iphe = Dns.GetHostEntry (url);
-                } catch { iphe = null; }
-                foreach (IPAddress tmp in iphe.AddressList) {
-                    if (tmp.AddressFamily == AddressFamily.InterNetwork) {
-                        result = tmp;
-                        break;
-                    }
+            IPHostEntry iphe;
+            try {
+                iphe = Dns.GetHostEntry (url);
+            } catch { iphe = null; }
+            foreach (IPAddress tmp in iphe.AddressList) {
+                if (tmp.AddressFamily == AddressFamily.InterNetwork) {
+                    result = tmp;
+                    break;
                 }
-            }
-            if (result == null) {
-                try {
-                    result = ResolvDNS (url, --retryTimes);
-                } catch (System.StackOverflowException) {; }
             }
             return result;
         }
