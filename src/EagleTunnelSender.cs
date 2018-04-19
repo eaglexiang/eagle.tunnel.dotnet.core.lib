@@ -131,11 +131,12 @@ namespace eagle.tunnel.dotnet.core {
                 if (done) {
                     string reply = tunnel.ReadStringR ();
                     if (!string.IsNullOrEmpty (reply) && reply != "nok") {
-                        if (IPAddress.TryParse (reply, out IPAddress ip1)) {
-                            result = ip1;
+                        if (IPAddress.TryParse (reply, out IPAddress ip)) {
+                            result = ip;
                         }
                     }
                 }
+                tunnel.Close();
             }
             return result;
         }
