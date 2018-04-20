@@ -144,10 +144,12 @@ namespace eagle.tunnel.dotnet.core {
             try {
                 iphe = Dns.GetHostEntry (url);
             } catch { iphe = null; }
-            foreach (IPAddress tmp in iphe.AddressList) {
-                if (tmp.AddressFamily == AddressFamily.InterNetwork) {
-                    result = tmp;
-                    break;
+            if (iphe != null) {
+                foreach (IPAddress tmp in iphe.AddressList) {
+                    if (tmp.AddressFamily == AddressFamily.InterNetwork) {
+                        result = tmp;
+                        break;
+                    }
                 }
             }
             return result;

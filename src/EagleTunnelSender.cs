@@ -109,13 +109,13 @@ namespace eagle.tunnel.dotnet.core {
                         if (!dnsCaches[e.Domain].IsDead) {
                             e.IP = dnsCaches[e.Domain].IP;
                         } else {
-                            e.IP = ResolvDomain (e.Domain);
+                            e.IP = ResolvDomain (e);
                             if (e.IP != null) {
                                 dnsCaches[e.Domain].IP = e.IP;
                             }
                         }
                     } else {
-                        e.IP = ResolvDomain (e.Domain);
+                        e.IP = ResolvDomain (e);
                         if (e.IP != null) {
                             DnsCache cache = new DnsCache (e.Domain, e.IP, Conf.DnsCacheTti);
                             dnsCaches.TryAdd (e.Domain, cache);
@@ -125,16 +125,26 @@ namespace eagle.tunnel.dotnet.core {
             }
         }
 
-        private static IPAddress ResolvDomain (string domain) {
+        private static IPAddress ResolvDomain (EagleTunnelArgs e) {
             IPAddress result = null;
             int times = 3;
             while (result == null && times-- > 0) {
-                result = _ResolvDomain (domain);
+                result = _ResolvDomain (e);
             }
             return result;
         }
 
-        private static IPAddress _ResolvDomain (string domain) {
+        private static IPAddress _ResolvDomain (EagleTunnelArgs e) {
+            IPAddress result = null;
+            if (e.EnableProxy) {
+                result = ResolvByProxy (e.Domain);
+            } else {
+                result = ResolvByLocal (e.Domain);
+            }
+            return result;
+        }
+
+        private static IPAddress ResolvByProxy (string domain) {
             IPAddress result = null;
             Tunnel tunnel = CreateTunnel ();
             if (tunnel != null) {
@@ -154,23 +164,59 @@ namespace eagle.tunnel.dotnet.core {
             return result;
         }
 
+        private static IPAddress ResolvByLocal (string domain) {
+            IPAddress result = null;
+            IPHostEntry iphe;
+            try {
+                iphe = Dns.GetHostEntry (domain);
+            } catch { iphe = null; }
+            if (iphe != null) {
+                foreach (IPAddress tmp in iphe.AddressList) {
+                    if (tmp.AddressFamily == AddressFamily.InterNetwork) {
+                        result = tmp;
+                        break;
+                    }
+                }
+            }
+            return result;
+        }
+
         private static void SendTCPReq (out Tunnel tunnel, EagleTunnelArgs e) {
             tunnel = null;
             if (e != null && e.EndPoint != null) {
-                tunnel = CreateTunnel ();
-                if (tunnel != null) {
-                    string req = EagleTunnelHandler.EagleTunnelRequestType.TCP.ToString ();
-                    req += ' ' + e.EndPoint.Address.ToString ();
-                    req += ' ' + e.EndPoint.Port.ToString ();
-                    bool done = tunnel.WriteR (req);
-                    if (done) {
-                        string reply = tunnel.ReadStringR ();
-                        if (reply != "ok") {
-                            tunnel.Close ();
-                            tunnel = null;
-                        }
-                    }
+                if (e.EnableProxy) {
+                    ConnectByProxy (out tunnel, e);
+                } else {
+                    DirectConnect (out tunnel, e);
                 }
+            }
+        }
+
+        private static void ConnectByProxy (out Tunnel tunnel, EagleTunnelArgs e) {
+            tunnel = CreateTunnel ();
+            string req = EagleTunnelHandler.EagleTunnelRequestType.TCP.ToString ();
+            req += ' ' + e.EndPoint.Address.ToString ();
+            req += ' ' + e.EndPoint.Port.ToString ();
+            bool done = tunnel.WriteR (req);
+            if (done) {
+                string reply = tunnel.ReadStringR ();
+                if (reply != "ok") {
+                    tunnel.Close ();
+                    tunnel = null;
+                }
+            }
+        }
+
+        private static void DirectConnect (out Tunnel tunnel, EagleTunnelArgs e) {
+            tunnel = null;
+            Socket socket2Server = new Socket (AddressFamily.InterNetwork,
+                SocketType.Stream,
+                ProtocolType.Tcp);
+            try {
+                socket2Server.Connect (e.EndPoint);
+            } catch (SocketException) {; }
+            if (socket2Server.Connected) {
+                tunnel = new Tunnel (null, socket2Server);
             }
         }
     }

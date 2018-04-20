@@ -7,6 +7,26 @@ using System.Net;
 
 namespace eagle.tunnel.dotnet.core {
     public class Conf {
+        public enum ProxyStatus {
+            DISABLE,
+            ENABLE,
+            SMART
+        }
+        public static ArrayList whitelist_domain;
+        private static ArrayList whitelist_ip;
+        public static bool ContainsWhiteIP (string ip) {
+            return whitelist_ip.Contains (ip);
+        }
+        public static string NewWhitelistIP {
+            set {
+                if (!whitelist_ip.Contains (value)) {
+                    whitelist_ip.Add (value);
+                    string path = allConf["ip list"][0];
+                    File.Delete (path);
+                    File.WriteAllLines (path, (string[]) whitelist_ip.ToArray (typeof (string)));
+                }
+            }
+        }
         private static string confFilePath;
         private static EagleTunnelUser localUser;
         public static EagleTunnelUser LocalUser {
@@ -48,6 +68,16 @@ namespace eagle.tunnel.dotnet.core {
                 Dirty = true;
             }
         }
+        private static ProxyStatus proxyStatus;
+        public static ProxyStatus Status {
+            get {
+                return proxyStatus;
+            }
+            set {
+                proxyStatus = value;
+                Dirty = true;
+            }
+        }
         public static ConcurrentDictionary<string, List<string>> allConf;
         public static ConcurrentDictionary<string, EagleTunnelUser> Users;
         public static int maxClientsCount;
@@ -71,7 +101,7 @@ namespace eagle.tunnel.dotnet.core {
                 Dirty = true;
             }
         }
-        public static int DnsCacheTti {get;set;} = 600; // default 10 m
+        public static int DnsCacheTti { get; set; } = 600; // default 10 m
 
         private static object lockOfIndex;
         private static bool Dirty { get; set; }
@@ -198,6 +228,50 @@ namespace eagle.tunnel.dotnet.core {
                 }
             }
             Console.WriteLine ("Eagle Tunnel Switch: {0}", EnableEagleTunnel.ToString ());
+
+            Status = ProxyStatus.ENABLE; // default enable proxy
+            if (allConf.ContainsKey ("proxy status")) {
+                if (Enum.TryParse (allConf["proxy status"][0].ToUpper (), out ProxyStatus status)) {
+                    if (status == ProxyStatus.SMART) {
+                        if (ImportWhiteList ()) {
+                            Status = status;
+                        }
+                    } else if (status == ProxyStatus.DISABLE) {
+                        Status = status;
+                    }
+                }
+            }
+            Console.WriteLine ("Proxy Status: {0}", Status.ToString ());
+        }
+
+        private static bool ImportWhiteList () {
+            bool result = false;
+            if (allConf.ContainsKey ("ip list")) {
+                string path = allConf["ip list"][0];
+                if (File.Exists (path)) {
+                    whitelist_ip = new ArrayList ();
+                    string content = File.ReadAllText (path);
+                    content = content.Replace ("\r\n", "\n");
+                    content = content.Replace (" ", "");
+                    string[] ips = content.Split ('\n');
+                    whitelist_ip.AddRange (ips);
+                    whitelist_ip.Remove ("");
+                    result = true;
+                }
+            }
+            if (allConf.ContainsKey ("domain list")) {
+                string path = allConf["domain list"][0];
+                if (File.Exists (path)) {
+                    whitelist_domain = new ArrayList ();
+                    string content = File.ReadAllText (path);
+                    content = content.Replace ("\r\n", "\n");
+                    content = content.Replace (" ", "");
+                    string[] domains = content.Split ('\n');
+                    whitelist_domain.AddRange (domains);
+                    result &= true;
+                }
+            }
+            return result;
         }
 
         private static IPEndPoint[] CreateEndPoints (List<string> addresses) {
@@ -215,7 +289,7 @@ namespace eagle.tunnel.dotnet.core {
             }
             return list.ToArray (typeof (IPEndPoint)) as IPEndPoint[];
         }
-        
+
         private static void ImportUsers () {
             Users = new ConcurrentDictionary<string, EagleTunnelUser> ();
             Users.TryAdd ("anonymous", new EagleTunnelUser ("anonymous", "anonymous"));
@@ -225,8 +299,13 @@ namespace eagle.tunnel.dotnet.core {
                     string usersText = File.ReadAllText (pathOfUsersConf);
                     usersText = usersText.Replace ("\r\n", "\n");
                     string[] usersArray = usersText.Split ('\n');
-                    usersArray = Format (usersArray);
-                    foreach (string line in usersArray) {
+                    for (int i = 0; i < usersArray.Length; ++i) {
+                        string line = usersArray[i];
+                        int indexOfSharp = line.IndexOf ('#');
+                        if (indexOfSharp >= 0) {
+                            line = line.Substring (0, indexOfSharp + 1);
+                        }
+                        line = line.Trim();
                         if (EagleTunnelUser.TryParse (line, out EagleTunnelUser user)) {
                             if (!Users.ContainsKey (user.ID)) {
                                 Users.TryAdd (user.ID, user);
@@ -239,15 +318,6 @@ namespace eagle.tunnel.dotnet.core {
             }
         }
 
-        public static string[][] SplitStrs (string[] src, char sig) {
-            ArrayList list = new ArrayList ();
-            for (int i = 0; i < src.Length; ++i) {
-                string[] tmp = src[i].Split (sig);
-                list.Add (tmp);
-            }
-            return list.ToArray (typeof (string[])) as string[][];
-        }
-
         /// <summary>
         /// Read all configurations from file
         /// </summary>
@@ -258,11 +328,18 @@ namespace eagle.tunnel.dotnet.core {
                 string allConfText = File.ReadAllText (confPath);
                 allConfText = allConfText.Replace ("\r\n", "\n");
                 string[] lines = allConfText.Split ('\n');
-                // create array for [key : value]
-                string[][] arg_lines = SplitStrs (lines, '=');
-                foreach (string[] arg_line in arg_lines) {
-                    if (arg_line.Length == 2) {
-                        AddValue (arg_line[0], arg_line[1]);
+                for (int i = 0; i < lines.Length; ++i) {
+                    int indexOfSharp = lines[i].IndexOf ('#');
+                    if (indexOfSharp >= 0) {
+                        lines[i] = lines[i].Substring (0, indexOfSharp);
+                    }
+                }
+                foreach (string line in lines) {
+                    string[] args = line.Split('=');
+                    if (args.Length == 2) {
+                        string key = args[0].Trim();
+                        string value = args[1].Trim();
+                        AddValue (key, value);
                     }
                 }
             } else {
@@ -270,23 +347,7 @@ namespace eagle.tunnel.dotnet.core {
             }
         }
 
-        private static string[] Format (string[] lines) {
-            ArrayList newLines = new ArrayList ();
-            foreach (string line in lines) {
-                string validline = line;
-                if (validline.Contains ("#")) {
-                    int index = validline.IndexOf ("#");
-                    validline = validline.Substring (0, index);
-                }
-                validline = validline.Trim ();
-                newLines.Add (validline);
-            }
-            return newLines.ToArray (typeof (string)) as string[];
-        }
-
         private static void AddValue (string key, string value) {
-            key = key.Trim ();
-            value = value.Trim ();
             if (!allConf.ContainsKey (key)) {
                 allConf.TryAdd (key, new List<string> ());
             }
@@ -321,6 +382,11 @@ namespace eagle.tunnel.dotnet.core {
             }
             if (localUser != null) {
                 result += "user=" + localUser.ToString () + "\n";
+            }
+            if (whitelist_domain != null) {
+                result += "proxy status=" + Status.ToString () + "\n";
+                result += "domain list=" + allConf["domain list"][0] + "\n";
+                result += "ip list=" + allConf["ip list"][0] + "\n";
             }
             return result;
         }
