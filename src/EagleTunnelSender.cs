@@ -194,15 +194,17 @@ namespace eagle.tunnel.dotnet.core {
 
         private static void ConnectByProxy (out Tunnel tunnel, EagleTunnelArgs e) {
             tunnel = CreateTunnel ();
-            string req = EagleTunnelHandler.EagleTunnelRequestType.TCP.ToString ();
-            req += ' ' + e.EndPoint.Address.ToString ();
-            req += ' ' + e.EndPoint.Port.ToString ();
-            bool done = tunnel.WriteR (req);
-            if (done) {
-                string reply = tunnel.ReadStringR ();
-                if (reply != "ok") {
-                    tunnel.Close ();
-                    tunnel = null;
+            if (tunnel != null) {
+                string req = EagleTunnelHandler.EagleTunnelRequestType.TCP.ToString ();
+                req += ' ' + e.EndPoint.Address.ToString ();
+                req += ' ' + e.EndPoint.Port.ToString ();
+                bool done = tunnel.WriteR (req);
+                if (done) {
+                    string reply = tunnel.ReadStringR ();
+                    if (reply != "ok") {
+                        tunnel.Close ();
+                        tunnel = null;
+                    }
                 }
             }
         }

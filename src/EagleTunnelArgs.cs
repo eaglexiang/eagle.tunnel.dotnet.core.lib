@@ -60,17 +60,17 @@ namespace eagle.tunnel.dotnet.core {
 
         private static bool CheckEnableProxy (IPAddress ip) {
             string _ip = ip.ToString ();
-            bool result = Conf.ContainsWhiteIP (_ip);
-            if (!result) {
-                result = CheckIPLocation (ip);
-                if (result) {
+            bool inside = Conf.ContainsWhiteIP (_ip);
+            if (!inside) {
+                inside = CheckIfInside (ip);
+                if (inside) {
                     Conf.NewWhitelistIP = _ip;
                 }
             }
-            return result;
+            return !inside;
         }
 
-        private static bool CheckIPLocation (IPAddress ip) {
+        private static bool CheckIfInside (IPAddress ip) {
             bool result = false;
             string req = @"https://ip2c.org/" + ip.ToString ();
             string reply = "";
@@ -79,8 +79,7 @@ namespace eagle.tunnel.dotnet.core {
                 reply = client.DownloadString (req);
             } catch (WebException) {; }
             if (!string.IsNullOrEmpty (reply)) {
-                if (reply != @"1;CN;CHN;China" &&
-                    reply != @"1;ZZ;ZZZ;Reserved") {
+                if (reply == @"1;CN;CHN;China") {
                     result = true;
                 }
             }

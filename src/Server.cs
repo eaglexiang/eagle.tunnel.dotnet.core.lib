@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace eagle.tunnel.dotnet.core {
     public class Server {
-        private static string version = "1.4.0";
+        public static string Version { get; } = "1.4.0";
         private static ConcurrentQueue<Tunnel> clients;
         private static Socket[] servers;
         private static IPEndPoint[] localAddresses;
@@ -164,7 +164,7 @@ namespace eagle.tunnel.dotnet.core {
                 if (Conf.allConf["speed-check"][0] == "on") {
                     while (IsRunning) {
                         foreach (EagleTunnelUser item in Conf.Users.Values) {
-                            item.LimitSpeedAsync();
+                            item.LimitSpeedAsync ();
                         }
                         Thread.Sleep (5000);
                     }
@@ -200,10 +200,6 @@ namespace eagle.tunnel.dotnet.core {
             Thread thread = new Thread (Close);
             thread.IsBackground = true;
             thread.Start ();
-        }
-
-        public static string Version () {
-            return version;
         }
     }
 }
