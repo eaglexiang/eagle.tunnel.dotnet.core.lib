@@ -84,19 +84,21 @@ namespace eagle.tunnel.dotnet.core {
 
         private static bool CheckUser (Tunnel tunnel) {
             bool result = false;
-            if (Conf.LocalUser != null) {
-                bool done = tunnel.WriteR (Conf.LocalUser.ToString ());
-                if (done) {
-                    string reply = tunnel.ReadStringR ();
-                    if (!string.IsNullOrEmpty (reply)) {
-                        result = reply == "valid";
+            if (tunnel != null) {
+                if (Conf.LocalUser != null) {
+                    bool done = tunnel.WriteR (Conf.LocalUser.ToString ());
+                    if (done) {
+                        string reply = tunnel.ReadStringR ();
+                        if (!string.IsNullOrEmpty (reply)) {
+                            result = reply == "valid";
+                        }
                     }
+                } else {
+                    result = true;
                 }
-            } else {
-                result = true;
-            }
-            if (result) {
-                Conf.LocalUser.AddTunnel (tunnel);
+                if (result) {
+                    Conf.LocalUser.AddTunnel (tunnel);
+                }
             }
             return result;
         }
