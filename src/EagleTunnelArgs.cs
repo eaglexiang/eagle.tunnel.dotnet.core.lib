@@ -60,19 +60,24 @@ namespace eagle.tunnel.dotnet.core {
 
         private static bool CheckEnableProxy (IPAddress ip) {
             string _ip = ip.ToString ();
-            bool inside = Conf.ContainsWhiteIP (_ip);
-            if (!inside) {
-                inside = CheckIfInside (ip);
+            bool inside = Conf.ContainsBlackIP (_ip);
+            bool outside = Conf.ContainsWhiteIP (_ip);
+            if (!(inside || outside)) {
+                inside = CheckIfInside (_ip);
+                outside = !inside;
                 if (inside) {
+                    Conf.NewBlackIP = _ip;
+                }
+                if (outside) {
                     Conf.NewWhitelistIP = _ip;
                 }
             }
-            return !inside;
+            return (!inside) && outside;
         }
 
-        private static bool CheckIfInside (IPAddress ip) {
+        private static bool CheckIfInside (string ip) {
             bool result = false;
-            string req = @"https://ip2c.org/" + ip.ToString ();
+            string req = @"https://ip2c.org/" + ip;
             string reply = "";
             WebClient client = new WebClient ();
             try {
