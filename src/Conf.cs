@@ -343,7 +343,7 @@ namespace eagle.tunnel.dotnet.core {
             string result = "";
             foreach (string key in allConf.Keys) {
                 foreach (string value in allConf[key]) {
-                    result += (key + ':' + value + '\n');
+                    result += (key + '=' + value + '\n');
                 }
             }
             return result;
