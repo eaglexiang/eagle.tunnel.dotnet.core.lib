@@ -73,10 +73,7 @@ namespace eagle.tunnel.dotnet.core {
 
         private static bool CheckAuthen (Tunnel tunnel) {
             bool result = false;
-            if (!Conf.allConf.ContainsKey ("user-conf")) {
-                Conf.Users["anonymous"].AddTunnel (tunnel);
-                result = true;
-            } else {
+            if (Conf.allConf.ContainsKey ("user-check") && Conf.allConf["user-check"][0] == "on") {
                 byte[] buffer = new byte[100];
                 string req = tunnel.ReadStringL ();
                 if (!string.IsNullOrEmpty (req)) {
@@ -91,6 +88,9 @@ namespace eagle.tunnel.dotnet.core {
                 }
                 string reply = result ? "valid" : "invalid";
                 result &= tunnel.WriteL (reply);
+            } else {
+                Conf.Users["anonymous"].AddTunnel (tunnel);
+                result = true;
             }
             return result;
         }
@@ -141,14 +141,16 @@ namespace eagle.tunnel.dotnet.core {
         private static IPAddress ResolvDNS (string url) {
             IPAddress result = null;
             IPHostEntry iphe;
-            try {
-                iphe = Dns.GetHostEntry (url);
-            } catch { iphe = null; }
-            if (iphe != null) {
-                foreach (IPAddress tmp in iphe.AddressList) {
-                    if (tmp.AddressFamily == AddressFamily.InterNetwork) {
-                        result = tmp;
-                        break;
+            if (!string.IsNullOrEmpty (url)) {
+                try {
+                    iphe = Dns.GetHostEntry (url);
+                } catch { iphe = null; }
+                if (iphe != null) {
+                    foreach (IPAddress tmp in iphe.AddressList) {
+                        if (tmp.AddressFamily == AddressFamily.InterNetwork) {
+                            result = tmp;
+                            break;
+                        }
                     }
                 }
             }
