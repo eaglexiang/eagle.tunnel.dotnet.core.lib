@@ -7,9 +7,10 @@ using System.Threading;
 
 namespace eagle.tunnel.dotnet.core {
     public class Server {
-        public static string Version { get; } = "1.5.0";
-        public static string ProtocolVersion { get;} = "1.0";
+        public static string Version { get; } = "1.5.1";
+        public static string ProtocolVersion { get; } = "1.0";
         private static ConcurrentQueue<Tunnel> clients;
+        private static int clientsThreshold = 16;
         private static Socket[] servers;
         private static IPEndPoint[] localAddresses;
         private static bool IsRunning { get; set; } // Server will keep running.
@@ -116,9 +117,27 @@ namespace eagle.tunnel.dotnet.core {
 
         private static void HandleClient (Socket socket2Client) {
             bool resultOfDequeue = true;
+            if (clients.Count > clientsThreshold) {
+                for (int i = 0; resultOfDequeue && i < clientsThreshold; ++i) {
+                    resultOfDequeue = clients.TryDequeue (out Tunnel tmpTunnel);
+                    if (resultOfDequeue) {
+                        if (tmpTunnel.IsWorking) {
+                            clients.Enqueue (tmpTunnel);
+                        }
+                        else{
+                            tmpTunnel.Close();
+                        }
+                    }
+                }
+                if (clients.Count > clientsThreshold) {
+                    clientsThreshold *= 2;
+                }
+            }
             while (clients.Count > Conf.maxClientsCount) {
                 resultOfDequeue = clients.TryDequeue (out Tunnel tunnel2Close);
-                tunnel2Close.Close ();
+                if (resultOfDequeue) {
+                    tunnel2Close.Close ();
+                }
             }
             if (resultOfDequeue) {
                 Thread threadHandleClient = new Thread (_handleClient);
