@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace eagle.tunnel.dotnet.core {
     public class Server {
-        public static string Version { get; } = "1.5.1";
+        public static string Version { get; } = "1.5.2";
         public static string ProtocolVersion { get; } = "1.0";
         private static ConcurrentQueue<Tunnel> clients;
         private static int clientsThreshold = 16;
@@ -118,25 +118,26 @@ namespace eagle.tunnel.dotnet.core {
         private static void HandleClient (Socket socket2Client) {
             bool resultOfDequeue = true;
             if (clients.Count > clientsThreshold) {
-                for (int i = 0; resultOfDequeue && i < clientsThreshold; ++i) {
+                for (int i = 0; i < clientsThreshold; ++i) {
                     resultOfDequeue = clients.TryDequeue (out Tunnel tmpTunnel);
                     if (resultOfDequeue) {
                         if (tmpTunnel.IsWorking) {
                             clients.Enqueue (tmpTunnel);
-                        }
-                        else{
-                            tmpTunnel.Close();
+                        } else {
+                            tmpTunnel.Close ();
                         }
                     }
                 }
                 if (clients.Count > clientsThreshold) {
                     clientsThreshold *= 2;
+                    clientsThreshold = clientsThreshold > Conf.maxClientsCount ?
+                        Conf.maxClientsCount : clientsThreshold;
                 }
-            }
-            while (clients.Count > Conf.maxClientsCount) {
-                resultOfDequeue = clients.TryDequeue (out Tunnel tunnel2Close);
-                if (resultOfDequeue) {
-                    tunnel2Close.Close ();
+                while (clients.Count > Conf.maxClientsCount) {
+                    resultOfDequeue = clients.TryDequeue (out Tunnel tunnel2Close);
+                    if (resultOfDequeue) {
+                        tunnel2Close.Close ();
+                    }
                 }
             }
             if (resultOfDequeue) {
