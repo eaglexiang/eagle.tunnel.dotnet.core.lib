@@ -24,7 +24,7 @@ namespace eagle.tunnel.dotnet.core {
                     lock (whitelist_ip) {
                         whitelist_ip.Add (value);
                         string path = allConf["config dir"][0] + "whitelist_ip.txt";
-                        File.AppendAllText(path, value + '\n');
+                        File.AppendAllText (path, value + '\n');
                     }
                 }
             }
@@ -38,7 +38,7 @@ namespace eagle.tunnel.dotnet.core {
                     lock (blacklist_ip) {
                         blacklist_ip.Add (value);
                         string path = allConf["config dir"][0] + "blacklist_ip.txt";
-                        File.AppendAllText(path, value + '\n');
+                        File.AppendAllText (path, value + '\n');
                     }
                 }
             }
@@ -52,6 +52,13 @@ namespace eagle.tunnel.dotnet.core {
             set {
                 localUser = value;
                 Dirty = true;
+                if (allConf.ContainsKey ("user")) {
+                    allConf["user"][0] = localUser.ToString ();
+                } else {
+                    if (allConf.TryAdd ("user", new List<string> ())) {
+                        allConf["user"][0] = localUser.ToString ();
+                    }
+                }
             }
         }
         private static bool enableSOCKS;
@@ -62,6 +69,13 @@ namespace eagle.tunnel.dotnet.core {
             set {
                 enableSOCKS = value;
                 Dirty = true;
+                if (allConf.ContainsKey ("socks")) {
+                    allConf["socks"][0] = value? "on": "off";
+                } else {
+                    if (allConf.TryAdd ("socks", new List<string> ())) {
+                        allConf["socks"][0] = value? "on": "off";
+                    }
+                }
             }
         }
         private static bool enableHTTP;
@@ -72,6 +86,13 @@ namespace eagle.tunnel.dotnet.core {
             set {
                 enableHTTP = value;
                 Dirty = true;
+                if (allConf.ContainsKey ("http")) {
+                    allConf["http"][0] = value? "on": "off";
+                } else {
+                    if (allConf.TryAdd ("http", new List<string> ())) {
+                        allConf["http"][0] = value? "on": "off";
+                    }
+                }
             }
         }
         private static bool enableEagleTunnel;
@@ -82,6 +103,13 @@ namespace eagle.tunnel.dotnet.core {
             set {
                 enableEagleTunnel = value;
                 Dirty = true;
+                if (allConf.ContainsKey ("eagle tunnel")) {
+                    allConf["eagle tunnel"][0] = value? "on": "off";
+                } else {
+                    if (allConf.TryAdd ("eagle tunnel", new List<string> ())) {
+                        allConf["eagle tunnel"][0] = value? "on": "off";
+                    }
+                }
             }
         }
         private static ProxyStatus proxyStatus;
@@ -92,6 +120,13 @@ namespace eagle.tunnel.dotnet.core {
             set {
                 proxyStatus = value;
                 Dirty = true;
+                if (allConf.ContainsKey ("proxy status")) {
+                    allConf["proxy status"][0] = value.ToString ();
+                } else {
+                    if (allConf.TryAdd ("proxy status", new List<string> ())) {
+                        allConf["proxy status"][0] = value.ToString ();
+                    }
+                }
             }
         }
         public static ConcurrentDictionary<string, List<string>> allConf;
@@ -105,6 +140,11 @@ namespace eagle.tunnel.dotnet.core {
             set {
                 localAddresses = value;
                 Dirty = true;
+                allConf["listen"] = new List<string>();
+                foreach (IPEndPoint item in value)
+                {
+                    allConf["listen"].Add(item.ToString());
+                }
             }
         }
         private static IPEndPoint[] remoteAddresses;
@@ -115,6 +155,11 @@ namespace eagle.tunnel.dotnet.core {
             set {
                 remoteAddresses = value;
                 Dirty = true;
+                allConf["relayer"] = new List<string>();
+                foreach (IPEndPoint item in value)
+                {
+                    allConf["relayer"].Add(item.ToString());
+                }
             }
         }
         public static int DnsCacheTti { get; set; } = 600; // default 10 m
@@ -246,7 +291,7 @@ namespace eagle.tunnel.dotnet.core {
             Console.WriteLine ("Eagle Tunnel Switch: {0}", EnableEagleTunnel.ToString ());
 
             if (allConf.ContainsKey ("proxy status")) {
-                Status = (ProxyStatus) Enum.Parse (typeof (Conf.ProxyStatus),
+                proxyStatus = (ProxyStatus) Enum.Parse (typeof (Conf.ProxyStatus),
                     allConf["proxy status"][0].ToUpper ());
                 if (Status == ProxyStatus.SMART) {
                     ImportList ("whitelist_domain.txt", out whitelist_domain);
