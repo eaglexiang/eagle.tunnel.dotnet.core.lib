@@ -101,6 +101,9 @@ namespace eagle.tunnel.dotnet.core {
                 proxyStatus = value;
                 Dirty = true;
                 allConf.TryAdd ("proxy status", new List<string> ());
+                if (allConf["proxy status"].Count == 0) {
+                    allConf["proxy status"].Add ("");
+                }
                 allConf["proxy status"][0] = value.ToString ();
             }
         }
