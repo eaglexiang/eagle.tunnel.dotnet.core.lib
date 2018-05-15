@@ -53,6 +53,9 @@ namespace eagle.tunnel.dotnet.core {
                 localUser = value;
                 Dirty = true;
                 allConf.TryAdd ("user", new List<string> ());
+                if (allConf["user"].Count == 0) {
+                    allConf["user"].Add ("");
+                }
                 allConf["user"][0] = localUser.ToString ();
             }
         }
@@ -65,6 +68,9 @@ namespace eagle.tunnel.dotnet.core {
                 enableSOCKS = value;
                 Dirty = true;
                 allConf.TryAdd ("socks", new List<string> ());
+                if (allConf["socks"].Count == 0) {
+                    allConf["socks"].Add ("");
+                }
                 allConf["socks"][0] = value? "on": "off";
             }
         }
@@ -77,6 +83,9 @@ namespace eagle.tunnel.dotnet.core {
                 enableHTTP = value;
                 Dirty = true;
                 allConf.TryAdd ("http", new List<string> ());
+                if (allConf["http"].Count == 0) {
+                    allConf["http"].Add ("");
+                }
                 allConf["http"][0] = value? "on": "off";
             }
         }
@@ -89,6 +98,9 @@ namespace eagle.tunnel.dotnet.core {
                 enableEagleTunnel = value;
                 Dirty = true;
                 allConf.TryAdd ("eagle tunnel", new List<string> ());
+                if (allConf["eagle tunnel"].Count == 0) {
+                    allConf["eagle tunnel"].Add ("");
+                }
                 allConf["eagle tunnel"][0] = value? "on": "off";
             }
         }
