@@ -140,10 +140,11 @@ namespace eagle.tunnel.dotnet.core {
             set {
                 localAddresses = value;
                 Dirty = true;
-                allConf["listen"] = new List<string>();
-                foreach (IPEndPoint item in value)
-                {
-                    allConf["listen"].Add(item.ToString());
+                if (!allConf.TryAdd ("listen", new List<string> ())) {
+                    allConf["listen"] = new List<string> ();
+                }
+                foreach (IPEndPoint item in value) {
+                    allConf["listen"].Add (item.ToString ());
                 }
             }
         }
@@ -155,10 +156,11 @@ namespace eagle.tunnel.dotnet.core {
             set {
                 remoteAddresses = value;
                 Dirty = true;
-                allConf["relayer"] = new List<string>();
-                foreach (IPEndPoint item in value)
-                {
-                    allConf["relayer"].Add(item.ToString());
+                if (!allConf.TryAdd ("listen", new List<string> ())) {
+                    allConf["relayer"] = new List<string> ();
+                }
+                foreach (IPEndPoint item in value) {
+                    allConf["relayer"].Add (item.ToString ());
                 }
             }
         }
@@ -174,8 +176,8 @@ namespace eagle.tunnel.dotnet.core {
                 if (args.Length == 2) {
                     if (IPAddress.TryParse (args[0], out IPAddress ipa)) {
                         if (int.TryParse (args[1], out int port)) {
-                            LocalAddresses = new IPEndPoint[1];
-                            LocalAddresses[0] = new IPEndPoint (ipa, port);
+                            localAddresses = new IPEndPoint[1];
+                            localAddresses[0] = new IPEndPoint (ipa, port);
                             result = true;
                         }
                     }
@@ -191,8 +193,8 @@ namespace eagle.tunnel.dotnet.core {
                 if (args.Length == 2) {
                     if (IPAddress.TryParse (args[0], out IPAddress ipa)) {
                         if (int.TryParse (args[1], out int port)) {
-                            RemoteAddresses = new IPEndPoint[1];
-                            RemoteAddresses[0] = new IPEndPoint (ipa, port);
+                            remoteAddresses = new IPEndPoint[1];
+                            remoteAddresses[0] = new IPEndPoint (ipa, port);
                             result = true;
                         }
                     }
