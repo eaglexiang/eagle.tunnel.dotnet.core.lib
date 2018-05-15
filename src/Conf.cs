@@ -52,13 +52,8 @@ namespace eagle.tunnel.dotnet.core {
             set {
                 localUser = value;
                 Dirty = true;
-                if (allConf.ContainsKey ("user")) {
-                    allConf["user"][0] = localUser.ToString ();
-                } else {
-                    if (allConf.TryAdd ("user", new List<string> ())) {
-                        allConf["user"][0] = localUser.ToString ();
-                    }
-                }
+                allConf.TryAdd ("user", new List<string> ());
+                allConf["user"][0] = localUser.ToString ();
             }
         }
         private static bool enableSOCKS;
@@ -69,13 +64,8 @@ namespace eagle.tunnel.dotnet.core {
             set {
                 enableSOCKS = value;
                 Dirty = true;
-                if (allConf.ContainsKey ("socks")) {
-                    allConf["socks"][0] = value? "on": "off";
-                } else {
-                    if (allConf.TryAdd ("socks", new List<string> ())) {
-                        allConf["socks"][0] = value? "on": "off";
-                    }
-                }
+                allConf.TryAdd ("socks", new List<string> ());
+                allConf["socks"][0] = value? "on": "off";
             }
         }
         private static bool enableHTTP;
@@ -86,13 +76,8 @@ namespace eagle.tunnel.dotnet.core {
             set {
                 enableHTTP = value;
                 Dirty = true;
-                if (allConf.ContainsKey ("http")) {
-                    allConf["http"][0] = value? "on": "off";
-                } else {
-                    if (allConf.TryAdd ("http", new List<string> ())) {
-                        allConf["http"][0] = value? "on": "off";
-                    }
-                }
+                allConf.TryAdd ("http", new List<string> ());
+                allConf["http"][0] = value? "on": "off";
             }
         }
         private static bool enableEagleTunnel;
@@ -103,13 +88,8 @@ namespace eagle.tunnel.dotnet.core {
             set {
                 enableEagleTunnel = value;
                 Dirty = true;
-                if (allConf.ContainsKey ("eagle tunnel")) {
-                    allConf["eagle tunnel"][0] = value? "on": "off";
-                } else {
-                    if (allConf.TryAdd ("eagle tunnel", new List<string> ())) {
-                        allConf["eagle tunnel"][0] = value? "on": "off";
-                    }
-                }
+                allConf.TryAdd ("eagle tunnel", new List<string> ());
+                allConf["eagle tunnel"][0] = value? "on": "off";
             }
         }
         private static ProxyStatus proxyStatus;
@@ -120,13 +100,8 @@ namespace eagle.tunnel.dotnet.core {
             set {
                 proxyStatus = value;
                 Dirty = true;
-                if (allConf.ContainsKey ("proxy status")) {
-                    allConf["proxy status"][0] = value.ToString ();
-                } else {
-                    if (allConf.TryAdd ("proxy status", new List<string> ())) {
-                        allConf["proxy status"][0] = value.ToString ();
-                    }
-                }
+                allConf.TryAdd ("proxy status", new List<string> ());
+                allConf["proxy status"][0] = value.ToString ();
             }
         }
         public static ConcurrentDictionary<string, List<string>> allConf;
