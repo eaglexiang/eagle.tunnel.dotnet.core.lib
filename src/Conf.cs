@@ -285,15 +285,13 @@ namespace eagle.tunnel.dotnet.core {
             if (allConf.ContainsKey ("proxy status")) {
                 proxyStatus = (ProxyStatus) Enum.Parse (typeof (Conf.ProxyStatus),
                     allConf["proxy status"][0].ToUpper ());
-                if (proxyStatus == ProxyStatus.SMART) {
-                    ImportList ("whitelist_domain.txt", out whitelist_domain);
-                    ImportList ("whitelist_ip.txt", out whitelist_ip);
-                    ImportList ("blacklist_ip.txt", out blacklist_ip);
-                }
             } else {
                 proxyStatus = ProxyStatus.ENABLE; // default enable proxy
             }
             Console.WriteLine ("Proxy Status: {0}", proxyStatus.ToString ());
+            ImportList ("whitelist_domain.txt", out whitelist_domain);
+            ImportList ("whitelist_ip.txt", out whitelist_ip);
+            ImportList ("blacklist_ip.txt", out blacklist_ip);
         }
 
         private static void ImportWhiteList () {
@@ -305,13 +303,19 @@ namespace eagle.tunnel.dotnet.core {
                 path += filename;
             }
 
-            string[] lines = File.ReadAllLines (path, System.Text.Encoding.UTF8);
-            for (int i = 0; i < lines.Length; ++i) {
-                int indexOfSharp = lines[i].IndexOf ('#');
-                if (indexOfSharp >= 0) {
-                    lines[i] = lines[i].Substring (0, indexOfSharp); // remote note
+            string[] lines;
+            if (File.Exists (path)) {
+                lines = File.ReadAllLines (path, System.Text.Encoding.UTF8);
+                for (int i = 0; i < lines.Length; ++i) {
+                    int indexOfSharp = lines[i].IndexOf ('#');
+                    if (indexOfSharp >= 0) {
+                        lines[i] = lines[i].Substring (0, indexOfSharp); // remote note
+                    }
+                    lines[i] = lines[i].Trim ();
                 }
-                lines[i] = lines[i].Trim ();
+            }
+            else{
+                lines = null;
             }
             list = new ArrayList ();
             list.AddRange (lines);
