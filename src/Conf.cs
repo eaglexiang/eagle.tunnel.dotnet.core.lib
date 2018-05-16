@@ -155,13 +155,17 @@ namespace eagle.tunnel.dotnet.core {
             bool result = false;
             if (address != null) {
                 string[] args = address.Split (':');
-                if (args.Length == 2) {
+                if (args.Length >= 1) {
                     if (IPAddress.TryParse (args[0], out IPAddress ipa)) {
-                        if (int.TryParse (args[1], out int port)) {
-                            localAddresses = new IPEndPoint[1];
-                            localAddresses[0] = new IPEndPoint (ipa, port);
-                            result = true;
+                        int _port = 8080;
+                        if (args.Length >= 2) {
+                            if (int.TryParse (args[1], out int port)) {
+                                _port = port;
+                            }
                         }
+                        localAddresses = new IPEndPoint[1];
+                        localAddresses[0] = new IPEndPoint (ipa, _port);
+                        result = true;
                     }
                 }
             }
@@ -172,13 +176,17 @@ namespace eagle.tunnel.dotnet.core {
             bool result = false;
             if (!string.IsNullOrEmpty (address)) {
                 string[] args = address.Split (':');
-                if (args.Length == 2) {
+                if (args.Length >= 1) {
                     if (IPAddress.TryParse (args[0], out IPAddress ipa)) {
-                        if (int.TryParse (args[1], out int port)) {
-                            remoteAddresses = new IPEndPoint[1];
-                            remoteAddresses[0] = new IPEndPoint (ipa, port);
-                            result = true;
+                        int _port = 8080;
+                        if (args.Length >= 2) {
+                            if (int.TryParse (args[1], out int port)) {
+                                _port = port;
+                            }
                         }
+                        remoteAddresses = new IPEndPoint[1];
+                        remoteAddresses[0] = new IPEndPoint (ipa, _port);
+                        result = true;
                     }
                 }
             }
