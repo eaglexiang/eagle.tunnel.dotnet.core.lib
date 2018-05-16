@@ -139,7 +139,7 @@ namespace eagle.tunnel.dotnet.core {
             }
             set {
                 remoteAddresses = value;
-                if (!allConf.TryAdd ("listen", new List<string> ())) {
+                if (!allConf.TryAdd ("relayer", new List<string> ())) {
                     allConf["relayer"] = new List<string> ();
                 }
                 foreach (IPEndPoint item in value) {
