@@ -235,7 +235,7 @@ namespace eagle.tunnel.dotnet.core {
                 Console.WriteLine ("User: {0}", LocalUser.ID);
             }
 
-            maxClientsCount = 200;
+            maxClientsCount = 500;
             if (allConf.ContainsKey ("worker")) {
                 if (int.TryParse (allConf["worker"][0], out int workerCount)) {
                     maxClientsCount = workerCount;
