@@ -313,12 +313,13 @@ namespace eagle.tunnel.dotnet.core {
                     }
                     lines[i] = lines[i].Trim ();
                 }
-            }
-            else{
+            } else {
                 lines = null;
             }
             list = new ArrayList ();
-            list.AddRange (lines);
+            if (lines != null) {
+                list.AddRange (lines);
+            }
         }
 
         private static IPEndPoint[] CreateEndPoints (List<string> addresses) {
