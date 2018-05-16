@@ -163,8 +163,9 @@ namespace eagle.tunnel.dotnet.core {
                                 _port = port;
                             }
                         }
-                        localAddresses = new IPEndPoint[1];
-                        localAddresses[0] = new IPEndPoint (ipa, _port);
+                        IPEndPoint[] tmpList = new IPEndPoint[1];
+                        tmpList[0] = new IPEndPoint (ipa, _port);
+                        LocalAddresses = tmpList;
                         result = true;
                     }
                 }
@@ -184,8 +185,9 @@ namespace eagle.tunnel.dotnet.core {
                                 _port = port;
                             }
                         }
-                        remoteAddresses = new IPEndPoint[1];
-                        remoteAddresses[0] = new IPEndPoint (ipa, _port);
+                        IPEndPoint[] tmpList = new IPEndPoint[1];
+                        tmpList[0] = new IPEndPoint (ipa, _port);
+                        RemoteAddresses = tmpList;
                         result = true;
                     }
                 }
