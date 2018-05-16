@@ -51,7 +51,6 @@ namespace eagle.tunnel.dotnet.core {
             }
             set {
                 localUser = value;
-                Dirty = true;
                 allConf.TryAdd ("user", new List<string> ());
                 if (allConf["user"].Count == 0) {
                     allConf["user"].Add ("");
@@ -66,7 +65,6 @@ namespace eagle.tunnel.dotnet.core {
             }
             set {
                 enableSOCKS = value;
-                Dirty = true;
                 allConf.TryAdd ("socks", new List<string> ());
                 if (allConf["socks"].Count == 0) {
                     allConf["socks"].Add ("");
@@ -81,7 +79,6 @@ namespace eagle.tunnel.dotnet.core {
             }
             set {
                 enableHTTP = value;
-                Dirty = true;
                 allConf.TryAdd ("http", new List<string> ());
                 if (allConf["http"].Count == 0) {
                     allConf["http"].Add ("");
@@ -96,7 +93,6 @@ namespace eagle.tunnel.dotnet.core {
             }
             set {
                 enableEagleTunnel = value;
-                Dirty = true;
                 allConf.TryAdd ("eagle tunnel", new List<string> ());
                 if (allConf["eagle tunnel"].Count == 0) {
                     allConf["eagle tunnel"].Add ("");
@@ -111,7 +107,6 @@ namespace eagle.tunnel.dotnet.core {
             }
             set {
                 proxyStatus = value;
-                Dirty = true;
                 allConf.TryAdd ("proxy status", new List<string> ());
                 if (allConf["proxy status"].Count == 0) {
                     allConf["proxy status"].Add ("");
@@ -129,7 +124,6 @@ namespace eagle.tunnel.dotnet.core {
             }
             set {
                 localAddresses = value;
-                Dirty = true;
                 if (!allConf.TryAdd ("listen", new List<string> ())) {
                     allConf["listen"] = new List<string> ();
                 }
@@ -145,7 +139,6 @@ namespace eagle.tunnel.dotnet.core {
             }
             set {
                 remoteAddresses = value;
-                Dirty = true;
                 if (!allConf.TryAdd ("listen", new List<string> ())) {
                     allConf["relayer"] = new List<string> ();
                 }
@@ -157,7 +150,6 @@ namespace eagle.tunnel.dotnet.core {
         public static int DnsCacheTti { get; set; } = 600; // default 10 m
 
         private static object lockOfIndex;
-        private static bool Dirty { get; set; }
 
         public static bool LocalAddress_Set (string address) {
             bool result = false;
@@ -217,7 +209,6 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         public static void Init (string confPath) {
-            Dirty = false;
             allConf = new ConcurrentDictionary<string, List<string>> (StringComparer.OrdinalIgnoreCase);
             confFilePath = confPath;
             ReadAll ();
@@ -375,10 +366,8 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         public static void Save () {
-            if (Dirty) {
-                string allConf = ToString ();
-                File.WriteAllText (confFilePath, allConf);
-            }
+            string allConf = ToString ();
+            File.WriteAllText (confFilePath, allConf);
         }
 
         public static new string ToString () {
