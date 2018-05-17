@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace eagle.tunnel.dotnet.core {
     public class Server {
-        public static string Version { get; } = "1.5.2";
+        public static string Version { get; } = "1.5.3";
         public static string ProtocolVersion { get; } = "1.0";
         private static ConcurrentQueue<Tunnel> clients;
         private static int clientsThreshold = 16;
@@ -162,7 +162,11 @@ namespace eagle.tunnel.dotnet.core {
                 Tunnel tunnel = RequestHandler.Handle (req, socket2Client);
                 if (tunnel != null) {
                     tunnel.Flow ();
-                    clients.Enqueue (tunnel);
+                    if (tunnel.IsWorking) {
+                        clients.Enqueue (tunnel);
+                    } else {
+                        tunnel.Close ();
+                    }
                 }
             }
         }
