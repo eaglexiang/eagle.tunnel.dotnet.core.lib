@@ -2,7 +2,7 @@ language: csharp
 solution: eagle.tunnel.dotnet.core.lib.csproj
 dist: trusty
 sudo: required
-dotnet: 2.1.200
+dotnet: 2.0.2
 mono: none
 
 script:
