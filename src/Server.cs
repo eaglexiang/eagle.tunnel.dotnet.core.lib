@@ -137,20 +137,16 @@ namespace eagle.tunnel.dotnet.core {
                         }
                     }
                 }
-                while (clients.Count > Conf.maxClientsCount) {
-                    resultOfDequeue = clients.TryDequeue (out Tunnel tunnel2Close);
-                    if (resultOfDequeue) {
-                        tunnel2Close.Close ();
-                    }
+            }
+            while (clients.Count >= Conf.maxClientsCount) {
+                resultOfDequeue = clients.TryDequeue (out Tunnel tunnel2Close);
+                if (resultOfDequeue) {
+                    tunnel2Close.Close ();
                 }
             }
-            if (resultOfDequeue) {
-                Thread threadHandleClient = new Thread (_handleClient);
-                threadHandleClient.IsBackground = true;
-                threadHandleClient.Start (socket2Client);
-            } else {
-                Console.WriteLine ("error: failed to dequeue before new client handled");
-            }
+            Thread threadHandleClient = new Thread (_handleClient);
+            threadHandleClient.IsBackground = true;
+            threadHandleClient.Start (socket2Client);
         }
 
         private static void _handleClient (object socket2ClientObj) {
