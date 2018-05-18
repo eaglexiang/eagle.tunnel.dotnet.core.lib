@@ -8,8 +8,8 @@ namespace eagle.tunnel.dotnet.core {
         private static ConcurrentDictionary<string, DnsCache> dnsCaches =
             new ConcurrentDictionary<string, DnsCache> ();
 
-        public static void FlushDnsCaches() {
-            dnsCaches.Clear();
+        public static void FlushDnsCaches () {
+            dnsCaches = new ConcurrentDictionary<string, DnsCache> ();
         }
 
         private static Tunnel CreateTunnel () {
@@ -112,12 +112,20 @@ namespace eagle.tunnel.dotnet.core {
                 e.IP = null;
                 if (e.Domain != null) {
                     if (dnsCaches.ContainsKey (e.Domain)) {
-                        if (!dnsCaches[e.Domain].IsDead) {
-                            e.IP = dnsCaches[e.Domain].IP;
-                        } else {
+                        try {
+                            if (!dnsCaches[e.Domain].IsDead) {
+                                e.IP = dnsCaches[e.Domain].IP;
+                            } else {
+                                e.IP = ResolvDomain (e);
+                                if (e.IP != null) {
+                                    dnsCaches[e.Domain].IP = e.IP;
+                                }
+                            }
+                        } catch (System.Collections.Generic.KeyNotFoundException) {
                             e.IP = ResolvDomain (e);
                             if (e.IP != null) {
-                                dnsCaches[e.Domain].IP = e.IP;
+                                DnsCache cache = new DnsCache (e.Domain, e.IP, Conf.DnsCacheTti);
+                                dnsCaches.TryAdd (e.Domain, cache);
                             }
                         }
                     } else {
