@@ -9,7 +9,7 @@ namespace eagle.tunnel.dotnet.core {
             new ConcurrentDictionary<string, DnsCache> ();
 
         public static void FlushDnsCaches() {
-            dnsCaches = new ConcurrentDictionary<string, DnsCache> ();
+            dnsCaches.Clear();
         }
 
         private static Tunnel CreateTunnel () {
