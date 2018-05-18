@@ -13,6 +13,7 @@ namespace eagle.tunnel.dotnet.core {
             SMART
         }
         public static ArrayList whitelist_domain;
+        public static bool EnableListSaving = true;
         private static ArrayList whitelist_ip;
         private static ArrayList blacklist_ip;
         public static bool ContainsWhiteIP (string ip) {
@@ -22,18 +23,20 @@ namespace eagle.tunnel.dotnet.core {
         }
         public static string NewWhitelistIP {
             set {
-                lock (whitelist_ip) {
-                    if (!whitelist_ip.Contains (value)) {
-                        whitelist_ip.Add (value);
-                        string path = allConf["config dir"][0] +
-                            Path.DirectorySeparatorChar + "whitelist_ip.txt";
-                        try {
-                            if (File.Exists (path)) {
-                                File.AppendAllText (path, value + '\n');
-                            } else {
-                                File.WriteAllText (path, value + '\n');
-                            }
-                        } catch (UnauthorizedAccessException) {; }
+                if (EnableListSaving) {
+                    lock (whitelist_ip) {
+                        if (!whitelist_ip.Contains (value)) {
+                            whitelist_ip.Add (value);
+                            string path = allConf["config dir"][0] +
+                                Path.DirectorySeparatorChar + "whitelist_ip.txt";
+                            try {
+                                if (File.Exists (path)) {
+                                    File.AppendAllText (path, value + '\n');
+                                } else {
+                                    File.WriteAllText (path, value + '\n');
+                                }
+                            } catch (UnauthorizedAccessException) {; }
+                        }
                     }
                 }
             }
@@ -45,18 +48,20 @@ namespace eagle.tunnel.dotnet.core {
         }
         public static string NewBlackIP {
             set {
-                lock (blacklist_ip) {
-                    if (!blacklist_ip.Contains (value)) {
-                        blacklist_ip.Add (value);
-                        string path = allConf["config dir"][0] +
-                            Path.DirectorySeparatorChar + "blacklist_ip.txt";
-                        try {
-                            if (File.Exists (path)) {
-                                File.AppendAllText (path, value + '\n');
-                            } else {
-                                File.WriteAllText (path, value + '\n');
-                            }
-                        } catch (UnauthorizedAccessException) {; }
+                if (EnableListSaving) {
+                    lock (blacklist_ip) {
+                        if (!blacklist_ip.Contains (value)) {
+                            blacklist_ip.Add (value);
+                            string path = allConf["config dir"][0] +
+                                Path.DirectorySeparatorChar + "blacklist_ip.txt";
+                            try {
+                                if (File.Exists (path)) {
+                                    File.AppendAllText (path, value + '\n');
+                                } else {
+                                    File.WriteAllText (path, value + '\n');
+                                }
+                            } catch (UnauthorizedAccessException) {; }
+                        }
                     }
                 }
             }
