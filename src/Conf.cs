@@ -16,29 +16,45 @@ namespace eagle.tunnel.dotnet.core {
         private static ArrayList whitelist_ip;
         private static ArrayList blacklist_ip;
         public static bool ContainsWhiteIP (string ip) {
-            return whitelist_ip.Contains (ip);
+            lock (whitelist_ip) {
+                return whitelist_ip.Contains (ip);
+            }
         }
         public static string NewWhitelistIP {
             set {
-                if (!whitelist_ip.Contains (value)) {
-                    lock (whitelist_ip) {
+                lock (whitelist_ip) {
+                    if (!whitelist_ip.Contains (value)) {
                         whitelist_ip.Add (value);
                         string path = allConf["config dir"][0] + "whitelist_ip.txt";
-                        File.AppendAllText (path, value + '\n');
+                        try {
+                            if (File.Exists (path)) {
+                                File.AppendAllText (path, value + '\n');
+                            } else {
+                                File.WriteAllText (path, value + '\n');
+                            }
+                        } catch (UnauthorizedAccessException) {; }
                     }
                 }
             }
         }
         public static bool ContainsBlackIP (string ip) {
-            return blacklist_ip.Contains (ip);
+            lock (blacklist_ip) {
+                return blacklist_ip.Contains (ip);
+            }
         }
         public static string NewBlackIP {
             set {
-                if (!blacklist_ip.Contains (value)) {
-                    lock (blacklist_ip) {
+                lock (blacklist_ip) {
+                    if (!blacklist_ip.Contains (value)) {
                         blacklist_ip.Add (value);
                         string path = allConf["config dir"][0] + "blacklist_ip.txt";
-                        File.AppendAllText (path, value + '\n');
+                        try {
+                            if (File.Exists (path)) {
+                                File.AppendAllText (path, value + '\n');
+                            } else {
+                                File.WriteAllText (path, value + '\n');
+                            }
+                        } catch (UnauthorizedAccessException) {; }
                     }
                 }
             }
@@ -294,10 +310,7 @@ namespace eagle.tunnel.dotnet.core {
             ImportList ("whitelist_ip.txt", out whitelist_ip);
             ImportList ("blacklist_ip.txt", out blacklist_ip);
         }
-
-        private static void ImportWhiteList () {
-
-        }
+        
         private static void ImportList (string filename, out ArrayList list, string path = "") {
             if (path == "") {
                 path = allConf["config dir"][0] + '/';

@@ -118,7 +118,7 @@ namespace eagle.tunnel.dotnet.core {
 
         private static void HandleClient (Socket socket2Client) {
             bool resultOfDequeue = true;
-            if (clients.Count >= clientsThreshold) {
+            if (clients.Count > clientsThreshold) {
                 for (int i = 0; i < clientsThreshold; ++i) {
                     resultOfDequeue = clients.TryDequeue (out Tunnel tmpTunnel);
                     if (resultOfDequeue) {
