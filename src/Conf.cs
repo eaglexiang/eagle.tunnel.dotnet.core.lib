@@ -25,7 +25,8 @@ namespace eagle.tunnel.dotnet.core {
                 lock (whitelist_ip) {
                     if (!whitelist_ip.Contains (value)) {
                         whitelist_ip.Add (value);
-                        string path = allConf["config dir"][0] + "whitelist_ip.txt";
+                        string path = allConf["config dir"][0] +
+                            Path.DirectorySeparatorChar + "whitelist_ip.txt";
                         try {
                             if (File.Exists (path)) {
                                 File.AppendAllText (path, value + '\n');
@@ -47,7 +48,8 @@ namespace eagle.tunnel.dotnet.core {
                 lock (blacklist_ip) {
                     if (!blacklist_ip.Contains (value)) {
                         blacklist_ip.Add (value);
-                        string path = allConf["config dir"][0] + "blacklist_ip.txt";
+                        string path = allConf["config dir"][0] +
+                            Path.DirectorySeparatorChar + "blacklist_ip.txt";
                         try {
                             if (File.Exists (path)) {
                                 File.AppendAllText (path, value + '\n');
@@ -310,10 +312,10 @@ namespace eagle.tunnel.dotnet.core {
             ImportList ("whitelist_ip.txt", out whitelist_ip);
             ImportList ("blacklist_ip.txt", out blacklist_ip);
         }
-        
+
         private static void ImportList (string filename, out ArrayList list, string path = "") {
             if (path == "") {
-                path = allConf["config dir"][0] + '/';
+                path = allConf["config dir"][0] + Path.DirectorySeparatorChar;
                 path += filename;
             }
 
