@@ -88,7 +88,7 @@ namespace eagle.tunnel.dotnet.core {
                     result = SocketL.Connected;
                 }
                 if (SocketR != null) {
-                    result = SocketR.Connected || result;
+                    result = SocketR.Connected && result;
                 }
                 return result;
             }
