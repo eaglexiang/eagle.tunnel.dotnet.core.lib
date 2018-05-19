@@ -17,7 +17,12 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         public double Speed () {
-            double speed = pipeL2R.Speed() + pipeR2L.Speed();
+            double speed;
+            if (IsWorking) {
+                speed = pipeL2R.Speed () + pipeR2L.Speed ();
+            } else {
+                speed = 0;
+            }
             return speed;
         }
 

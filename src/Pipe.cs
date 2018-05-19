@@ -160,7 +160,6 @@ namespace eagle.tunnel.dotnet.core {
                         SocketFrom.Close ();
                     } catch {; }
                 }
-                SocketFrom = null;
             }
             if (SocketTo != null) {
                 if (SocketTo.Connected) {
@@ -172,7 +171,6 @@ namespace eagle.tunnel.dotnet.core {
                         SocketTo.Close ();
                     } catch {; }
                 }
-                SocketTo = null;
             }
         }
 

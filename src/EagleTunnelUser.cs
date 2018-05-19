@@ -70,10 +70,10 @@ namespace eagle.tunnel.dotnet.core {
                 }
                 // get speed
                 foreach (Tunnel item in tunnels) {
-                    speed += (item.Speed () / 1024);
+                    speed += item.Speed ();
                 }
             }
-            return speed;
+            return speed / 1024;
         }
 
         public void LimitSpeedAsync () {
