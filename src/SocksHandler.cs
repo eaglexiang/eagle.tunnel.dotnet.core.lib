@@ -66,12 +66,17 @@ namespace eagle.tunnel.dotnet.core {
                         written = socket2Client.Send (buffer);
                     } catch { written = 0; }
                     if (result != null) {
-                        if (written > 0) {
-                            result.SocketL = socket2Client;
-                        } else {
+                        result.SocketL = socket2Client;
+                        if (written == 0) {
                             result.Close ();
                             result = null;
                         }
+                    } else {
+                        try {
+                            socket2Client.Shutdown (SocketShutdown.Both);
+                        } catch {; }
+                        System.Threading.Thread.Sleep (10);
+                        socket2Client.Close ();
                     }
                 }
             }

@@ -63,6 +63,7 @@ namespace eagle.tunnel.dotnet.core {
                             newTunnels.Add (item);
                         }
                     }
+                    tunnels.Clear();
                     tunnels = newTunnels;
                     if (tunnels.Count > tunnelsGCThresshold) {
                         tunnelsGCThresshold *= 2;

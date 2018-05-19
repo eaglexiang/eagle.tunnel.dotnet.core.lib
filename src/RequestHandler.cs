@@ -48,7 +48,7 @@ namespace eagle.tunnel.dotnet.core {
                     if (socket2Client.Connected) {
                         try {
                             socket2Client.Shutdown (SocketShutdown.Both);
-                            Thread.Sleep (100);
+                            Thread.Sleep (10);
                             socket2Client.Close ();
                         } catch {; }
                     }

@@ -28,7 +28,7 @@ namespace eagle.tunnel.dotnet.core {
             UserFrom = user;
             bytesTransferred = 0;
             bytesLastChecked = 0;
-            bufferRead = new byte[1024];
+            bufferRead = new byte[2048];
             IsRunning = false;
             timeLastChecked = DateTime.Now;
         }
@@ -155,10 +155,8 @@ namespace eagle.tunnel.dotnet.core {
                     try {
                         SocketFrom.Shutdown (SocketShutdown.Both);
                     } catch {; }
-                    Thread.Sleep (100);
-                    try {
-                        SocketFrom.Close ();
-                    } catch {; }
+                    Thread.Sleep (10);
+                    SocketFrom.Close ();
                 }
             }
             if (SocketTo != null) {
@@ -166,10 +164,8 @@ namespace eagle.tunnel.dotnet.core {
                     try {
                         SocketTo.Shutdown (SocketShutdown.Both);
                     } catch {; }
-                    Thread.Sleep (100);
-                    try {
-                        SocketTo.Close ();
-                    } catch {; }
+                    Thread.Sleep (10);
+                    SocketTo.Close ();
                 }
             }
         }

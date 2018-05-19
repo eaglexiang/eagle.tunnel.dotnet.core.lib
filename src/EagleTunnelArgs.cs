@@ -79,15 +79,16 @@ namespace eagle.tunnel.dotnet.core {
             bool result = false;
             string req = @"https://ip2c.org/" + ip;
             string reply = "";
-            WebClient client = new WebClient ();
-            try {
-                reply = client.DownloadString (req);
-            } catch (WebException) {; }
-            if (!string.IsNullOrEmpty (reply)) {
-                if (reply == @"1;CN;CHN;China") {
-                    result = true;
+            using (WebClient client = new WebClient ()) {
+                try {
+                    reply = client.DownloadString (req);
+                } catch (WebException) {; }
+                if (!string.IsNullOrEmpty (reply)) {
+                    if (reply == @"1;CN;CHN;China") {
+                        result = true;
+                    }
                 }
-            }
+            };
             return result;
         }
     }

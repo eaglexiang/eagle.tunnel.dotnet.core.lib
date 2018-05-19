@@ -45,14 +45,15 @@ namespace eagle.tunnel.dotnet.core {
 
         public static Tunnel Handle (EagleTunnelHandler.EagleTunnelRequestType type, EagleTunnelArgs e) {
             Tunnel result = null;
-            if (type != EagleTunnelHandler.EagleTunnelRequestType.Unknown &&
-                e != null) {
+            if (e != null) {
                 switch (type) {
                     case EagleTunnelHandler.EagleTunnelRequestType.DNS:
                         SendDNSReq (e);
                         break;
                     case EagleTunnelHandler.EagleTunnelRequestType.TCP:
                         SendTCPReq (out result, e);
+                        break;
+                    default:
                         break;
                 }
             }

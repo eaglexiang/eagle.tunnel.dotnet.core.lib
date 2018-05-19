@@ -4,7 +4,6 @@ namespace eagle.tunnel.dotnet.core {
     public class Tunnel {
         private Pipe pipeL2R; // pipe from Left socket to Right socket
         private Pipe pipeR2L; // pipe from Right socket to Left socket
-        private System.DateTime timeCreated;
 
         public object IsWaiting {
             get {
@@ -24,24 +23,6 @@ namespace eagle.tunnel.dotnet.core {
                 speed = 0;
             }
             return speed;
-        }
-
-        public string UserL {
-            get {
-                return pipeL2R.UserFrom;
-            }
-            set {
-                pipeL2R.UserFrom = value;
-            }
-        }
-
-        public string UserFrom {
-            get {
-                return pipeR2L.UserFrom;
-            }
-            set {
-                pipeR2L.UserFrom = value;
-            }
         }
 
         public Socket SocketL {
@@ -88,12 +69,13 @@ namespace eagle.tunnel.dotnet.core {
 
         public bool IsWorking {
             get {
-                bool result = false;
-                if (SocketL != null) {
+                bool result;
+                if (SocketL != null && SocketR != null) {
                     result = SocketL.Connected;
+                    result = SocketL.Connected && result;
                 }
-                if (SocketR != null) {
-                    result = SocketR.Connected && result;
+                else{
+                    result = false;
                 }
                 return result;
             }
@@ -102,7 +84,6 @@ namespace eagle.tunnel.dotnet.core {
         public Tunnel (Socket socketl = null, Socket socketr = null) {
             pipeL2R = new Pipe (socketl, socketr);
             pipeR2L = new Pipe (socketr, socketl);
-            timeCreated = System.DateTime.Now;
         }
 
         public void Flow () {
