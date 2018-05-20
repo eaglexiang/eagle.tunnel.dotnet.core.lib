@@ -125,7 +125,6 @@ namespace eagle.tunnel.dotnet.core {
                     bool done = Write (buffer);
                     if (done) {
                         buffer = ReadByte ();
-                        continue;
                     } else {
                         Close ();
                     }

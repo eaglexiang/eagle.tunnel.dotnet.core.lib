@@ -10,8 +10,6 @@ namespace eagle.tunnel.dotnet.core {
         public static string Version { get; } = "1.5.4";
         public static string ProtocolVersion { get; } = "1.0";
         private static ConcurrentQueue<Tunnel> clients;
-        private static int clientsThreshold = 16;
-        private static object lockOfClientsThreshold = new object ();
         private static Socket[] servers;
         private static IPEndPoint[] localAddresses;
         private static bool IsRunning { get; set; } // Server will keep running.
@@ -118,26 +116,6 @@ namespace eagle.tunnel.dotnet.core {
 
         private static void HandleClient (Socket socket2Client) {
             bool resultOfDequeue = true;
-            if (clients.Count >= clientsThreshold) {
-                for (int i = 0; i < clientsThreshold; ++i) {
-                    resultOfDequeue = clients.TryDequeue (out Tunnel tmpTunnel);
-                    if (resultOfDequeue) {
-                        if (tmpTunnel.IsWorking) {
-                            clients.Enqueue (tmpTunnel);
-                        } else {
-                            tmpTunnel.Close ();
-                        }
-                    }
-                }
-                if (clients.Count > clientsThreshold) {
-                    lock (lockOfClientsThreshold) {
-                        clientsThreshold += 8;
-                        if (clientsThreshold > Conf.maxClientsCount) {
-                            clientsThreshold = Conf.maxClientsCount;
-                        }
-                    }
-                }
-            }
             while (clients.Count >= Conf.maxClientsCount) {
                 resultOfDequeue = clients.TryDequeue (out Tunnel tunnel2Close);
                 if (resultOfDequeue) {
@@ -166,6 +144,16 @@ namespace eagle.tunnel.dotnet.core {
                         clients.Enqueue (tunnel);
                     } else {
                         tunnel.Close ();
+                    }
+                }
+            }
+            for(int i = clients.Count; i > 0; --i){
+                if(clients.TryDequeue(out Tunnel tunnel)){
+                    if(tunnel.IsWorking){
+                        clients.Enqueue(tunnel);
+                    }
+                    else{
+                        tunnel.Close();
                     }
                 }
             }
