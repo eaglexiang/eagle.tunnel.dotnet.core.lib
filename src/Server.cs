@@ -175,11 +175,11 @@ namespace eagle.tunnel.dotnet.core {
             double speed = 0;
             if (Conf.Users != null) {
                 foreach (EagleTunnelUser item in Conf.Users.Values) {
-                    speed += item.Speed ();
+                    speed += item.Speed;
                 }
             }
             if (Conf.LocalUser != null) {
-                speed += Conf.LocalUser.Speed ();
+                speed += Conf.LocalUser.Speed;
             }
             return speed;
         }

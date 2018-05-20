@@ -49,30 +49,36 @@ namespace eagle.tunnel.dotnet.core {
 
         private static bool CheckEnableProxy (string domain) {
             bool result = false;
-            foreach (string item in Conf.whitelist_domain) {
-                if (domain.IndexOf (item) >= 0) {
-                    result = true;
-                    break;
+            if (!string.IsNullOrEmpty (domain)) {
+                foreach (string item in Conf.whitelist_domain) {
+                    if (domain.IndexOf (item) >= 0) {
+                        result = true;
+                        break;
+                    }
                 }
             }
             return result;
         }
 
         private static bool CheckEnableProxy (IPAddress ip) {
-            string _ip = ip.ToString ();
-            bool inside = Conf.ContainsBlackIP (_ip);
-            bool outside = Conf.ContainsWhiteIP (_ip);
-            if (!(inside || outside)) {
-                inside = CheckIfInside (_ip);
-                outside = !inside;
-                if (inside) {
-                    Conf.NewBlackIP = _ip;
+            bool result = true;
+            if (ip != null) {
+                string _ip = ip.ToString ();
+                bool inside = Conf.ContainsBlackIP (_ip);
+                bool outside = Conf.ContainsWhiteIP (_ip);
+                if (!(inside || outside)) {
+                    inside = CheckIfInside (_ip);
+                    outside = !inside;
+                    if (inside) {
+                        Conf.NewBlackIP = _ip;
+                    }
+                    if (outside) {
+                        Conf.NewWhitelistIP = _ip;
+                    }
                 }
-                if (outside) {
-                    Conf.NewWhitelistIP = _ip;
-                }
+                result = (!inside) && outside;
             }
-            return (!inside) && outside;
+            return result;
         }
 
         private static bool CheckIfInside (string ip) {

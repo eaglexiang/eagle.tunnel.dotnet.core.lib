@@ -73,27 +73,31 @@ namespace eagle.tunnel.dotnet.core {
                 if (SocketL != null && SocketR != null) {
                     result = SocketL.Connected;
                     result = SocketL.Connected && result;
-                }
-                else{
+                } else {
                     result = false;
                 }
                 return result;
             }
         }
 
+        public bool IsOpening { get; set; }
+
         public Tunnel (Socket socketl = null, Socket socketr = null) {
             pipeL2R = new Pipe (socketl, socketr);
             pipeR2L = new Pipe (socketr, socketl);
+            IsOpening = false;
         }
 
         public void Flow () {
             pipeL2R.Flow ();
             pipeR2L.Flow ();
+            IsOpening = false;
         }
 
         public void Close () {
             pipeL2R.Close ();
             pipeR2L.Close ();
+            IsOpening = false;
         }
 
         public string ReadStringL () {

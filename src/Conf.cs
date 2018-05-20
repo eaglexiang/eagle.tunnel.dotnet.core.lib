@@ -13,7 +13,6 @@ namespace eagle.tunnel.dotnet.core {
             SMART
         }
         public static ArrayList whitelist_domain;
-        public static bool EnableListSaving = true;
         private static ArrayList whitelist_ip;
         private static ArrayList blacklist_ip;
         public static bool ContainsWhiteIP (string ip) {
@@ -26,17 +25,15 @@ namespace eagle.tunnel.dotnet.core {
                 lock (whitelist_ip) {
                     if (!whitelist_ip.Contains (value)) {
                         whitelist_ip.Add (value);
-                        if (EnableListSaving) {
-                            string path = allConf["config dir"][0] +
-                                Path.DirectorySeparatorChar + "whitelist_ip.txt";
-                            try {
-                                if (File.Exists (path)) {
-                                    File.AppendAllText (path, value + '\n');
-                                } else {
-                                    File.WriteAllText (path, value + '\n');
-                                }
-                            } catch (UnauthorizedAccessException) {; }
-                        }
+                        string path = allConf["config dir"][0] +
+                            Path.DirectorySeparatorChar + "whitelist_ip.txt";
+                        try {
+                            if (File.Exists (path)) {
+                                File.AppendAllText (path, value + '\n');
+                            } else {
+                                File.WriteAllText (path, value + '\n');
+                            }
+                        } catch (UnauthorizedAccessException) {; }
                     }
                 }
             }
@@ -51,17 +48,15 @@ namespace eagle.tunnel.dotnet.core {
                 lock (blacklist_ip) {
                     if (!blacklist_ip.Contains (value)) {
                         blacklist_ip.Add (value);
-                        if (EnableListSaving) {
-                            string path = allConf["config dir"][0] +
-                                Path.DirectorySeparatorChar + "blacklist_ip.txt";
-                            try {
-                                if (File.Exists (path)) {
-                                    File.AppendAllText (path, value + '\n');
-                                } else {
-                                    File.WriteAllText (path, value + '\n');
-                                }
-                            } catch (UnauthorizedAccessException) {; }
-                        }
+                        string path = allConf["config dir"][0] +
+                            Path.DirectorySeparatorChar + "blacklist_ip.txt";
+                        try {
+                            if (File.Exists (path)) {
+                                File.AppendAllText (path, value + '\n');
+                            } else {
+                                File.WriteAllText (path, value + '\n');
+                            }
+                        } catch (UnauthorizedAccessException) {; }
                     }
                 }
             }
@@ -116,11 +111,11 @@ namespace eagle.tunnel.dotnet.core {
             }
             set {
                 enableEagleTunnel = value;
-                allConf.TryAdd ("eagle tunnel", new List<string> ());
-                if (allConf["eagle tunnel"].Count == 0) {
-                    allConf["eagle tunnel"].Add ("");
+                allConf.TryAdd ("et", new List<string> ());
+                if (allConf["et"].Count == 0) {
+                    allConf["et"].Add ("");
                 }
-                allConf["eagle tunnel"][0] = value? "on": "off";
+                allConf["et"][0] = value? "on": "off";
             }
         }
         private static ProxyStatus proxyStatus;
@@ -130,11 +125,11 @@ namespace eagle.tunnel.dotnet.core {
             }
             set {
                 proxyStatus = value;
-                allConf.TryAdd ("proxy status", new List<string> ());
-                if (allConf["proxy status"].Count == 0) {
-                    allConf["proxy status"].Add ("");
+                allConf.TryAdd ("proxy-status", new List<string> ());
+                if (allConf["proxy-status"].Count == 0) {
+                    allConf["proxy-status"].Add ("");
                 }
-                allConf["proxy status"][0] = value.ToString ();
+                allConf["proxy-status"][0] = value.ToString ();
             }
         }
         public static ConcurrentDictionary<string, List<string>> allConf;
@@ -299,16 +294,16 @@ namespace eagle.tunnel.dotnet.core {
             }
             Console.WriteLine ("HTTP Switch: {0}", EnableHTTP.ToString ());
 
-            if (allConf.ContainsKey ("eagle tunnel")) {
-                if (allConf["eagle tunnel"][0] == "on") {
+            if (allConf.ContainsKey ("et")) {
+                if (allConf["et"][0] == "on") {
                     enableEagleTunnel = true;
                 }
             }
             Console.WriteLine ("Eagle Tunnel Switch: {0}", EnableEagleTunnel.ToString ());
 
-            if (allConf.ContainsKey ("proxy status")) {
+            if (allConf.ContainsKey ("proxy-status")) {
                 proxyStatus = (ProxyStatus) Enum.Parse (typeof (Conf.ProxyStatus),
-                    allConf["proxy status"][0].ToUpper ());
+                    allConf["proxy-status"][0].ToUpper ());
             } else {
                 proxyStatus = ProxyStatus.ENABLE; // default enable proxy
             }
