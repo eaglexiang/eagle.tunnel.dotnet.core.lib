@@ -231,7 +231,9 @@ namespace eagle.tunnel.dotnet.core {
                 ProtocolType.Tcp);
             try {
                 socket2Server.Connect (e.EndPoint);
-            } catch (SocketException) {; }
+            } catch (SocketException){
+                socket2Server.Close();
+            }
             if (socket2Server.Connected) {
                 tunnel = new Tunnel (null, socket2Server);
             }

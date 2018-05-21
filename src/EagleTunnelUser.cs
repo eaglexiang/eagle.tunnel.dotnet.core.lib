@@ -1,5 +1,5 @@
 using System.Collections;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace eagle.tunnel.dotnet.core {
     public class EagleTunnelUser {
@@ -7,21 +7,22 @@ namespace eagle.tunnel.dotnet.core {
         public string Password { get; set; }
         public int SpeedLimit { get; set; } // KB/s
         private object lockOfSpeedCheck;
-        private ConcurrentQueue<Tunnel> tunnels;
+        private Queue<Tunnel> tunnels;
         private object IsWaiting;
 
         public EagleTunnelUser (string id, string password) {
             ID = id;
             Password = password;
             SpeedLimit = 0;
-            tunnels = new ConcurrentQueue<Tunnel> ();
+            tunnels = new Queue<Tunnel> ();
             lockOfSpeedCheck = new object ();
             IsWaiting = false;
             speedNow = 0;
 
-            System.Threading.Thread thread_CheckSpeed = new System.Threading.Thread(CheckingSpeed);
+            System.Threading.Thread thread_CheckSpeed =
+                new System.Threading.Thread (CheckingSpeed);
             thread_CheckSpeed.IsBackground = true;
-            thread_CheckSpeed.Start();
+            thread_CheckSpeed.Start ();
         }
 
         public static bool TryParse (string parameter, out EagleTunnelUser user) {
@@ -67,16 +68,15 @@ namespace eagle.tunnel.dotnet.core {
         private double _Speed () {
             double speed = 0;
             for (int i = tunnels.Count; i > 0; --i) {
-                if (tunnels.TryDequeue (out Tunnel tunnel)) {
-                    if (tunnel.IsOpening) {
+                Tunnel tunnel = tunnels.Dequeue ();
+                if (tunnel.IsOpening) {
+                    tunnels.Enqueue (tunnel);
+                } else {
+                    if (tunnel.IsFlowing) {
+                        speed += tunnel.Speed ();
                         tunnels.Enqueue (tunnel);
                     } else {
-                        if (tunnel.IsWorking) {
-                            speed += tunnel.Speed ();
-                            tunnels.Enqueue (tunnel);
-                        } else {
-                            tunnel.Close ();
-                        }
+                        tunnel.Close ();
                     }
                 }
             }
@@ -84,7 +84,8 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         public void LimitSpeedAsync () {
-            System.Threading.Thread thread = new System.Threading.Thread (LimitSpeed);
+            System.Threading.Thread thread =
+                new System.Threading.Thread (LimitSpeed);
             thread.IsBackground = true;
             thread.Start ();
         }

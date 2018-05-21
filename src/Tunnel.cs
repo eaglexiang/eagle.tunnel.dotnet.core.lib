@@ -17,7 +17,7 @@ namespace eagle.tunnel.dotnet.core {
 
         public double Speed () {
             double speed;
-            if (IsWorking) {
+            if (IsFlowing) {
                 speed = pipeL2R.Speed () + pipeR2L.Speed ();
             } else {
                 speed = 0;
@@ -67,12 +67,12 @@ namespace eagle.tunnel.dotnet.core {
             }
         }
 
-        public bool IsWorking {
+        public bool IsFlowing {
             get {
                 bool result;
                 if (SocketL != null && SocketR != null) {
                     result = SocketL.Connected;
-                    result = SocketL.Connected && result;
+                    result = SocketR.Connected && result;
                 } else {
                     result = false;
                 }
@@ -95,8 +95,24 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         public void Close () {
-            pipeL2R.Close ();
-            pipeR2L.Close ();
+            if(SocketL != null){
+                if(SocketL.Connected){
+                    try{
+                        SocketL.Shutdown(SocketShutdown.Both);
+                    }catch{;}
+                    System.Threading.Thread.Sleep(10);
+                    SocketL.Close();
+                }
+            }
+            if(SocketR != null){
+                if(SocketR.Connected){
+                    try{
+                        SocketR.Shutdown(SocketShutdown.Both);
+                    }catch{;}
+                    System.Threading.Thread.Sleep(10);
+                    SocketR.Close();
+                }
+            }
             IsOpening = false;
         }
 

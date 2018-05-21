@@ -140,7 +140,7 @@ namespace eagle.tunnel.dotnet.core {
                 Tunnel tunnel = RequestHandler.Handle (req, socket2Client);
                 if (tunnel != null) {
                     tunnel.Flow ();
-                    if (tunnel.IsWorking) {
+                    if (tunnel.IsFlowing) {
                         clients.Enqueue (tunnel);
                     } else {
                         tunnel.Close ();
@@ -149,7 +149,7 @@ namespace eagle.tunnel.dotnet.core {
             }
             for(int i = clients.Count; i > 0; --i){
                 if(clients.TryDequeue(out Tunnel tunnel)){
-                    if(tunnel.IsWorking){
+                    if(tunnel.IsFlowing){
                         clients.Enqueue(tunnel);
                     }
                     else{
@@ -201,8 +201,7 @@ namespace eagle.tunnel.dotnet.core {
                 }
                 // shut down all connections
                 while (clients.Count > 0) {
-                    bool resultOfDequeue = clients.TryDequeue (out Tunnel tunnel2Close);
-                    if (resultOfDequeue && tunnel2Close.IsWorking) {
+                    if(clients.TryDequeue (out Tunnel tunnel2Close)){
                         tunnel2Close.Close ();
                     }
                 }
