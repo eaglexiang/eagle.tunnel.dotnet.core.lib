@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace eagle.tunnel.dotnet.core {
     public class Server {
-        public static string Version { get; } = "1.5.4";
+        public static string Version { get; } = "1.6.0";
         public static string ProtocolVersion { get; } = "1.0";
         private static ConcurrentQueue<Tunnel> clients;
         private static Socket[] servers;
@@ -42,7 +42,7 @@ namespace eagle.tunnel.dotnet.core {
             if (!IsRunning) {
                 if (localAddresses != null) {
                     EagleTunnelArgs.StartResolvInside();
-                    
+
                     clients = new ConcurrentQueue<Tunnel> ();
                     servers = new Socket[localAddresses.Length];
                     Server.localAddresses = localAddresses;

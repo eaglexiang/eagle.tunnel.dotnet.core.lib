@@ -113,7 +113,7 @@ namespace eagle.tunnel.dotnet.core {
 
         private static bool IsRunning;
         private static int time2Wait = 1000;
-        private static int maxTime2Wait = 60000;
+        private static int maxTime2Wait = 10000;
         private static void HandleIp2Resolve () {
             while (IsRunning) {
                 while (ip2Resolv.Count > 0) {
