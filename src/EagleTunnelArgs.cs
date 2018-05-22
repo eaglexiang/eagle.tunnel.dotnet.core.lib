@@ -1,4 +1,6 @@
+using System.Collections.Concurrent;
 using System.Net;
+using System.Threading;
 
 namespace eagle.tunnel.dotnet.core {
     public class EagleTunnelArgs {
@@ -66,17 +68,22 @@ namespace eagle.tunnel.dotnet.core {
                 string _ip = ip.ToString ();
                 bool inside = Conf.ContainsBlackIP (_ip);
                 bool outside = Conf.ContainsWhiteIP (_ip);
-                if (!(inside || outside)) {
-                    inside = CheckIfInside (_ip);
-                    outside = !inside;
-                    if (inside) {
-                        Conf.NewBlackIP = _ip;
-                    }
-                    if (outside) {
-                        Conf.NewWhitelistIP = _ip;
+                if (!inside && !outside) {
+                    if (insideCache.ContainsKey (_ip)) {
+                        inside = insideCache[_ip];
+                        outside = !inside;
+                        if (inside) {
+                            Conf.NewBlackIP = _ip;
+                        }
+                        if (outside) {
+                            Conf.NewWhitelistIP = _ip;
+                        }
+                    } else {
+                        ip2Resolv.Enqueue (_ip);
+                        outside = !inside;
                     }
                 }
-                result = (!inside) && outside;
+                result = (!inside) || outside;
             }
             return result;
         }
@@ -96,6 +103,48 @@ namespace eagle.tunnel.dotnet.core {
                 }
             };
             return result;
+        }
+
+        public static ConcurrentDictionary<string, bool> insideCache =
+            new ConcurrentDictionary<string, bool> ();
+
+        private static ConcurrentQueue<string> ip2Resolv =
+            new ConcurrentQueue<string> ();
+
+        private static bool IsRunning;
+        private static int time2Wait = 1000;
+        private static int maxTime2Wait = 60000;
+        private static void HandleIp2Resolve () {
+            while (IsRunning) {
+                while (ip2Resolv.Count > 0) {
+                    if (ip2Resolv.TryDequeue (out string ip)) {
+                        if (!insideCache.ContainsKey (ip)) {
+                            bool result = CheckIfInside (ip);
+                            insideCache.TryAdd (ip, result);
+                            time2Wait = 1000;
+                        }
+                    } else {
+                        time2Wait += 1000;
+                        if (time2Wait > maxTime2Wait) {
+                            time2Wait = maxTime2Wait;
+                        }
+                    }
+                }
+                Thread.Sleep (time2Wait);
+            }
+        }
+
+        public static void StartResolvInside () {
+            IsRunning = true;
+            Thread thread_Resolv = new Thread (HandleIp2Resolve);
+            thread_Resolv.IsBackground = true;
+            thread_Resolv.Start ();
+        }
+
+        public static void DisposeAll () {
+            IsRunning = false;
+            Thread.Sleep (time2Wait * 2 + 100);
+            insideCache.Clear ();
         }
     }
 }

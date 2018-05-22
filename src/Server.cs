@@ -41,6 +41,8 @@ namespace eagle.tunnel.dotnet.core {
         public static void Start (IPEndPoint[] localAddresses) {
             if (!IsRunning) {
                 if (localAddresses != null) {
+                    EagleTunnelArgs.StartResolvInside();
+                    
                     clients = new ConcurrentQueue<Tunnel> ();
                     servers = new Socket[localAddresses.Length];
                     Server.localAddresses = localAddresses;
@@ -205,6 +207,7 @@ namespace eagle.tunnel.dotnet.core {
                         tunnel2Close.Close ();
                     }
                 }
+                EagleTunnelArgs.DisposeAll();
             }
         }
 

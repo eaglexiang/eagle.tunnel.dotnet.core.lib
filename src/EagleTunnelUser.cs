@@ -1,5 +1,5 @@
 using System.Collections;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace eagle.tunnel.dotnet.core {
     public class EagleTunnelUser {
@@ -7,14 +7,14 @@ namespace eagle.tunnel.dotnet.core {
         public string Password { get; set; }
         public int SpeedLimit { get; set; } // KB/s
         private object lockOfSpeedCheck;
-        private Queue<Tunnel> tunnels;
+        private ConcurrentQueue<Tunnel> tunnels;
         private object IsWaiting;
 
         public EagleTunnelUser (string id, string password) {
             ID = id;
             Password = password;
             SpeedLimit = 0;
-            tunnels = new Queue<Tunnel> ();
+            tunnels = new ConcurrentQueue<Tunnel> ();
             lockOfSpeedCheck = new object ();
             IsWaiting = false;
             speedNow = 0;
@@ -68,15 +68,16 @@ namespace eagle.tunnel.dotnet.core {
         private double _Speed () {
             double speed = 0;
             for (int i = tunnels.Count; i > 0; --i) {
-                Tunnel tunnel = tunnels.Dequeue ();
-                if (tunnel.IsOpening) {
-                    tunnels.Enqueue (tunnel);
-                } else {
-                    if (tunnel.IsFlowing) {
-                        speed += tunnel.Speed ();
+                if (tunnels.TryDequeue (out Tunnel tunnel)) {
+                    if (tunnel.IsOpening) {
                         tunnels.Enqueue (tunnel);
                     } else {
-                        tunnel.Close ();
+                        if (tunnel.IsFlowing) {
+                            speed += tunnel.Speed ();
+                            tunnels.Enqueue (tunnel);
+                        } else {
+                            tunnel.Close ();
+                        }
                     }
                 }
             }
