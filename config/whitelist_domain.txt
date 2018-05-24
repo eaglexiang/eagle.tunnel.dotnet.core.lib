@@ -6,7 +6,9 @@ googlevideo.com
 twitter.com
 twimg.com
 facebook.com
+facebook.net
 fbcdn.net
 fbsbx.com
 wikipedia.org
 rfa.org
+twitchsvc.net

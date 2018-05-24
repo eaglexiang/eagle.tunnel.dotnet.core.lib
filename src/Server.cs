@@ -41,7 +41,7 @@ namespace eagle.tunnel.dotnet.core {
         public static void Start (IPEndPoint[] localAddresses) {
             if (!IsRunning) {
                 if (localAddresses != null) {
-                    EagleTunnelArgs.StartResolvInside();
+                    EagleTunnelArgs.StartResolvInside ();
 
                     clients = new ConcurrentQueue<Tunnel> ();
                     servers = new Socket[localAddresses.Length];
@@ -149,13 +149,12 @@ namespace eagle.tunnel.dotnet.core {
                     }
                 }
             }
-            for(int i = clients.Count; i > 0; --i){
-                if(clients.TryDequeue(out Tunnel tunnel)){
-                    if(tunnel.IsFlowing){
-                        clients.Enqueue(tunnel);
-                    }
-                    else{
-                        tunnel.Close();
+            for (int i = clients.Count / 3; i > 0; --i) {
+                if (clients.TryDequeue (out Tunnel tunnel)) {
+                    if (tunnel.IsFlowing) {
+                        clients.Enqueue (tunnel);
+                    } else {
+                        tunnel.Close ();
                     }
                 }
             }
@@ -203,11 +202,11 @@ namespace eagle.tunnel.dotnet.core {
                 }
                 // shut down all connections
                 while (clients.Count > 0) {
-                    if(clients.TryDequeue (out Tunnel tunnel2Close)){
+                    if (clients.TryDequeue (out Tunnel tunnel2Close)) {
                         tunnel2Close.Close ();
                     }
                 }
-                EagleTunnelArgs.DisposeAll();
+                EagleTunnelArgs.DisposeAll ();
             }
         }
 
