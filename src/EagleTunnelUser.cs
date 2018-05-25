@@ -44,7 +44,6 @@ namespace eagle.tunnel.dotnet.core {
 
         public void AddTunnel (Tunnel tunnel2Add) {
             tunnel2Add.IsWaiting = IsWaiting;
-            tunnel2Add.IsOpening = true;
             tunnels.Enqueue (tunnel2Add);
         }
 

@@ -16,41 +16,34 @@ namespace eagle.tunnel.dotnet.core {
 
         private RequestHandler () { }
 
-        public static Tunnel Handle (byte[] firstMsg, Socket socket2Client) {
-            Tunnel result = null;
-            if (firstMsg != null && socket2Client != null) {
-                Tunnel tunnel = null;
-                string firstMsg_Str = Encoding.UTF8.GetString (firstMsg);
-                RequestType reqType = GetType (firstMsg);
-                switch (reqType) {
-                    case RequestType.Eagle_Tunnel:
-                        if (Conf.EnableEagleTunnel) {
-                            tunnel = EagleTunnelHandler.Handle (
-                                firstMsg_Str, socket2Client);
-                        }
-                        break;
-                    case RequestType.HTTP_Proxy:
-                        if (Conf.EnableHTTP) {
-                            tunnel = HTTPHandler.Handle (
-                                firstMsg_Str, socket2Client);
-                        }
-                        break;
-                    case RequestType.SOCKS5:
-                        if (Conf.EnableSOCKS) {
-                            tunnel = SocksHandler.Handle (
-                                firstMsg, socket2Client);
-                        }
-                        break;
-                }
-                if (tunnel != null) {
-                    result = tunnel;
-                } else {
-                    if (socket2Client.Connected) {
-                        try {
-                            socket2Client.Shutdown (SocketShutdown.Both);
-                            Thread.Sleep (10);
-                            socket2Client.Close ();
-                        } catch {; }
+        public static bool Handle (Tunnel tunnel) {
+            bool result = false;
+            if (tunnel == null) {
+                result = false;
+            } else {
+                byte[] firstMsg = tunnel.ReadL ();
+                if (firstMsg != null) {
+                    string firstMsg_Str = Encoding.UTF8.GetString (firstMsg);
+                    RequestType reqType = GetType (firstMsg);
+                    switch (reqType) {
+                        case RequestType.Eagle_Tunnel:
+                            if (Conf.EnableEagleTunnel) {
+                                result = EagleTunnelHandler.Handle (
+                                    firstMsg_Str, tunnel);
+                            }
+                            break;
+                        case RequestType.HTTP_Proxy:
+                            if (Conf.EnableHTTP) {
+                                result = HTTPHandler.Handle (
+                                    firstMsg_Str, tunnel);
+                            }
+                            break;
+                        case RequestType.SOCKS5:
+                            if (Conf.EnableSOCKS) {
+                                result = SocksHandler.Handle (
+                                    firstMsg, tunnel);
+                            }
+                            break;
                     }
                 }
             }

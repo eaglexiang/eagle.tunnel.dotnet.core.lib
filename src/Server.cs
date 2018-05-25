@@ -117,13 +117,6 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         private static void HandleClient (Socket socket2Client) {
-            bool resultOfDequeue = true;
-            while (clients.Count >= Conf.maxClientsCount) {
-                resultOfDequeue = clients.TryDequeue (out Tunnel tunnel2Close);
-                if (resultOfDequeue) {
-                    tunnel2Close.Close ();
-                }
-            }
             Thread threadHandleClient = new Thread (_handleClient);
             threadHandleClient.IsBackground = true;
             threadHandleClient.Start (socket2Client);
@@ -131,30 +124,38 @@ namespace eagle.tunnel.dotnet.core {
 
         private static void _handleClient (object socket2ClientObj) {
             Socket socket2Client = socket2ClientObj as Socket;
-            byte[] buffer = new byte[1024];
-            int read;
-            try {
-                read = socket2Client.Receive (buffer);
-            } catch { read = 0; }
-            if (read > 0) {
-                byte[] req = new byte[read];
-                Array.Copy (buffer, req, read);
-                Tunnel tunnel = RequestHandler.Handle (req, socket2Client);
-                if (tunnel != null) {
-                    tunnel.Flow ();
-                    if (tunnel.IsFlowing) {
-                        clients.Enqueue (tunnel);
-                    } else {
-                        tunnel.Close ();
-                    }
+            Tunnel tunnel2Add = new Tunnel (socket2ClientObj as Socket);
+
+            while (clients.Count >= Conf.maxClientsCount) {
+                if (clients.TryDequeue (out Tunnel tunnel2Close)) {
+                    tunnel2Close.Close ();
                 }
             }
-            for (int i = clients.Count / 3; i > 0; --i) {
-                if (clients.TryDequeue (out Tunnel tunnel)) {
-                    if (tunnel.IsFlowing) {
-                        clients.Enqueue (tunnel);
-                    } else {
-                        tunnel.Close ();
+            clients.Enqueue (tunnel2Add);
+            bool result = RequestHandler.Handle (tunnel2Add);
+            if (result) {
+                tunnel2Add.Flow ();
+            } else {
+                tunnel2Add.Close ();
+            }
+            if (clients.Count > Conf.maxClientsCount / 3) {
+                int closing = Conf.maxClientsCount / 6;
+                int closed = closing;
+                while ((closed / closing) >= 0.5) {
+                    closed = 0;
+                    for (int i = 0; i < closing; ++i) {
+                        if (clients.TryDequeue (out Tunnel tunnel2Check)) {
+                            if (!tunnel2Check.IsOpening) {
+                                if (tunnel2Check.IsFlowing) {
+                                    clients.Enqueue (tunnel2Check);
+                                } else {
+                                    tunnel2Check.Close ();
+                                    ++closed;
+                                }
+                            } else {
+                                clients.Enqueue (tunnel2Check);
+                            }
+                        }
                     }
                 }
             }

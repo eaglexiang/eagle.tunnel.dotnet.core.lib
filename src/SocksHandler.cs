@@ -11,29 +11,21 @@ namespace eagle.tunnel.dotnet.core {
             Udp
         }
 
-        public static Tunnel Handle (byte[] request, Socket socket2Client) {
-            Tunnel result = null;
-            if (request != null && socket2Client != null) {
+        public static bool Handle (byte[] request, Tunnel tunnel) {
+            bool result = false;
+            if (request != null && tunnel != null) {
                 int version = request[0];
                 // check if is socks version 5
                 if (version == '\u0005') {
                     string reply = "\u0005\u0000";
-                    byte[] buffer = Encoding.ASCII.GetBytes (reply);
-                    int written;
-                    try {
-                        written = socket2Client.Send (buffer);
-                    } catch { written = 0; }
-                    if (written > 0) {
-                        buffer = new byte[100];
-                        int read;
-                        try {
-                            read = socket2Client.Receive (buffer);
-                        } catch { read = 0; }
-                        if (read > 0) {
+                    result = tunnel.WriteL (reply);
+                    if (result) {
+                        byte[] buffer = tunnel.ReadL ();
+                        if (buffer != null && buffer.Length >= 2) {
                             SOCKS5_CMDType cmdType = (SOCKS5_CMDType) buffer[1];
                             switch (cmdType) {
                                 case SOCKS5_CMDType.Connect:
-                                    result = HandleTCPReq (buffer, socket2Client);
+                                    result = HandleTCPReq (buffer, tunnel);
                                     break;
                             }
                         }
@@ -43,9 +35,9 @@ namespace eagle.tunnel.dotnet.core {
             return result;
         }
 
-        private static Tunnel HandleTCPReq (byte[] request, Socket socket2Client) {
-            Tunnel result = null;
-            if (request != null && socket2Client != null) {
+        private static bool HandleTCPReq (byte[] request, Tunnel tunnel) {
+            bool result = false;
+            if (request != null && tunnel != null) {
                 IPAddress ip = GetIP (request);
                 int port = GetPort (request);
                 if (ip != null && port != 0) {
@@ -53,30 +45,17 @@ namespace eagle.tunnel.dotnet.core {
                     string reply;
                     EagleTunnelArgs e = new EagleTunnelArgs ();
                     e.EndPoint = reqIPEP;
-                    result = EagleTunnelSender.Handle (
+                    Tunnel tmpTunnel = EagleTunnelSender.Handle (
                         EagleTunnelHandler.EagleTunnelRequestType.TCP, e);
-                    if (result != null) {
-                        reply = "\u0005\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000";
-                    } else {
-                        reply = "\u0005\u0001\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000";
-                    }
-                    byte[] buffer = Encoding.ASCII.GetBytes (reply);
-                    int written;
-                    try {
-                        written = socket2Client.Send (buffer);
-                    } catch { written = 0; }
-                    if (result != null) {
-                        result.SocketL = socket2Client;
-                        if (written == 0) {
-                            result.Close ();
-                            result = null;
+                    if (tmpTunnel != null) {
+                        tunnel.SocketR = tmpTunnel.SocketR;
+                        tunnel.EncryptR = tmpTunnel.EncryptR;
+                        if (tmpTunnel != null) {
+                            reply = "\u0005\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000";
+                        } else {
+                            reply = "\u0005\u0001\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000";
                         }
-                    } else {
-                        try {
-                            socket2Client.Shutdown (SocketShutdown.Both);
-                        } catch {; }
-                        System.Threading.Thread.Sleep (10);
-                        socket2Client.Close ();
+                        result = tunnel.WriteL (reply);
                     }
                 }
             }

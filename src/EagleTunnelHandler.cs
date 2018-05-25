@@ -14,59 +14,56 @@ namespace eagle.tunnel.dotnet.core {
         private static ConcurrentDictionary<string, DnsCache> dnsCaches =
             new ConcurrentDictionary<string, DnsCache> ();
 
-        public static Tunnel Handle (string firstMsg, Socket socket2Client) {
-            Tunnel result = null;
+        public static bool Handle (string firstMsg, Tunnel tunnel) {
+            bool result;
             if (!string.IsNullOrEmpty (firstMsg) &&
-                socket2Client != null) {
-                Tunnel tunnel = CheckVersion (firstMsg, socket2Client);
-                if (tunnel != null) {
-                    if (CheckAuthen (tunnel)) {
+                tunnel != null) {
+                result = CheckVersion (firstMsg, tunnel);
+                if (result) {
+                    result = CheckAuthen (tunnel);
+                    if (result) {
                         string req = tunnel.ReadStringL ();
                         if (!string.IsNullOrEmpty (req)) {
                             EagleTunnelRequestType type = GetType (req);
-                            bool done = false;
                             switch (type) {
                                 case EagleTunnelRequestType.DNS:
                                     HandleDNSReq (req, tunnel);
                                     // no need to continue;
                                     break;
                                 case EagleTunnelRequestType.TCP:
-                                    done = TCPReqHandle (req, tunnel);
+                                    result = TCPReqHandle (req, tunnel);
                                     break;
-                            }
-                            if (done) {
-                                result = tunnel;
-                            } else {
-                                tunnel.Close ();
                             }
                         }
                     }
                 }
+            } else {
+                result = false;
             }
             return result;
         }
 
-        private static Tunnel CheckVersion (string firstMsg, Socket socket2Client) {
-            Tunnel result = null;
+        private static bool CheckVersion (string firstMsg, Tunnel tunnel) {
+            bool result;
             string[] args = firstMsg.Split (' ');
             if (args.Length >= 3) {
                 string reply = "";
-                bool valid = args[0] == "eagle_tunnel";
-                reply = valid ? "valid" : "invalid";
+                result = args[0] == "eagle_tunnel";
+                reply = result ? "valid" : "invalid";
                 bool valid1 = args[1] == "1.0";
-                valid &= valid1;
+                result &= valid1;
                 reply += valid1 ? " valid" : " invalid";
                 valid1 = args[2] == "simple";
-                valid &= valid1;
+                result &= valid1;
                 reply += valid1 ? " valid" : " invalid";
-                if (valid) {
-                    byte[] buffer = System.Text.Encoding.ASCII.GetBytes (reply);
-                    int written = socket2Client.Send (buffer);
-                    if (written > 0) {
-                        result = new Tunnel (socket2Client);
-                        result.EncryptL = true;
+                if (result) {
+                    result = tunnel.WriteL (reply);
+                    if (result) {
+                        tunnel.EncryptL = true;
                     }
                 }
+            } else {
+                result = false;
             }
             return result;
         }

@@ -85,7 +85,7 @@ namespace eagle.tunnel.dotnet.core {
         public Tunnel (Socket socketl = null, Socket socketr = null) {
             pipeL2R = new Pipe (socketl, socketr);
             pipeR2L = new Pipe (socketr, socketl);
-            IsOpening = false;
+            IsOpening = true;
         }
 
         public void Flow () {
