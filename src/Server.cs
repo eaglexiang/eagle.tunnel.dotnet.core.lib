@@ -139,9 +139,9 @@ namespace eagle.tunnel.dotnet.core {
                 tunnel2Add.Close ();
             }
             if (clients.Count > Conf.maxClientsCount / 3) {
-                int closing = Conf.maxClientsCount / 6;
-                int closed = closing;
-                while ((closed / closing) >= 0.5) {
+                double closing = Conf.maxClientsCount / 6;
+                double closed = closing;
+                while ((closed / closing) >= 0.3) {
                     closed = 0;
                     for (int i = 0; i < closing; ++i) {
                         if (clients.TryDequeue (out Tunnel tunnel2Check)) {
@@ -150,7 +150,7 @@ namespace eagle.tunnel.dotnet.core {
                                     clients.Enqueue (tunnel2Check);
                                 } else {
                                     tunnel2Check.Close ();
-                                    ++closed;
+                                    closed += 1;
                                 }
                             } else {
                                 clients.Enqueue (tunnel2Check);
