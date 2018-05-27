@@ -139,7 +139,7 @@ namespace eagle.tunnel.dotnet.core {
                 tunnel2Add.Close ();
             }
             if (clients.Count > Conf.maxClientsCount / 3) {
-                double closing = Conf.maxClientsCount / 6;
+                double closing = 10;
                 double closed = closing;
                 while ((closed / closing) >= 0.3) {
                     closed = 0;
