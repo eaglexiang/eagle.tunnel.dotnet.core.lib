@@ -10,7 +10,7 @@ namespace eagle.tunnel.dotnet.core {
         private ConcurrentQueue<Tunnel> tunnels;
         private object IsWaiting;
 
-        public EagleTunnelUser (string id, string password) {
+        public EagleTunnelUser (string id, string password, bool enableSpeedChecker) {
             ID = id;
             Password = password;
             SpeedLimit = 0;
@@ -19,18 +19,28 @@ namespace eagle.tunnel.dotnet.core {
             IsWaiting = false;
             speedNow = 0;
 
-            System.Threading.Thread thread_CheckSpeed =
-                new System.Threading.Thread (CheckingSpeed);
-            thread_CheckSpeed.IsBackground = true;
-            thread_CheckSpeed.Start ();
+            if (enableSpeedChecker) {
+                System.Threading.Thread thread_CheckSpeed =
+                    new System.Threading.Thread (CheckingSpeed);
+                thread_CheckSpeed.IsBackground = true;
+                thread_CheckSpeed.Start ();
+            }
         }
 
-        public static bool TryParse (string parameter, out EagleTunnelUser user) {
+        public static bool TryParse (string parameter, out EagleTunnelUser user, bool enableSpeedChecker) {
             user = null;
             if (parameter != null) {
                 string[] args = parameter.Split (':');
                 if (args.Length >= 2) {
-                    user = new EagleTunnelUser (args[0], args[1]);
+                    bool enableChecker = enableSpeedChecker;
+                    if (enableChecker) {
+                        if (Conf.allConf.ContainsKey ("speed-check")) {
+                            if (Conf.allConf["speed-check"][0] == "on") {
+                                enableChecker = true;
+                            }
+                        }
+                    }
+                    user = new EagleTunnelUser (args[0], args[1], enableChecker);
                     if (args.Length >= 3) {
                         if (int.TryParse (args[2], out int speed)) {
                             user.SpeedLimit = speed;
@@ -43,8 +53,12 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         public void AddTunnel (Tunnel tunnel2Add) {
-            tunnel2Add.IsWaiting = IsWaiting;
-            tunnels.Enqueue (tunnel2Add);
+            if (Conf.allConf.ContainsKey ("speed-check")) {
+                if (Conf.allConf["speed-check"][0] == "on") {
+                    tunnel2Add.IsWaiting = IsWaiting;
+                    tunnels.Enqueue (tunnel2Add);
+                }
+            }
         }
 
         private double speedNow;

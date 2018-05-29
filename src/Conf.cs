@@ -245,7 +245,7 @@ namespace eagle.tunnel.dotnet.core {
             Console.WriteLine ("find user(s): {0}", Users.Count);
 
             if (allConf.ContainsKey ("user")) {
-                if (EagleTunnelUser.TryParse (allConf["user"][0], out EagleTunnelUser user)) {
+                if (EagleTunnelUser.TryParse (allConf["user"][0], out EagleTunnelUser user, true)) {
                     localUser = user;
                 }
             }
@@ -360,13 +360,13 @@ namespace eagle.tunnel.dotnet.core {
 
         private static void ImportUsers () {
             Users = new ConcurrentDictionary<string, EagleTunnelUser> ();
-            Users.TryAdd ("anonymous", new EagleTunnelUser ("anonymous", "anonymous"));
+            Users.TryAdd ("anonymous", new EagleTunnelUser ("anonymous", "anonymous", true));
             if (allConf.ContainsKey ("user-check") &&
                 allConf["user-check"][0] == "on") {
                 ImportList ("users.list", out ArrayList users);
                 for (int i = 0; i < users.Count; ++i) {
                     string line = users[i] as string;
-                    if (EagleTunnelUser.TryParse (line, out EagleTunnelUser user)) {
+                    if (EagleTunnelUser.TryParse (line, out EagleTunnelUser user, true)) {
                         Users.TryAdd (user.ID, user);
                     }
                 }

@@ -74,7 +74,7 @@ namespace eagle.tunnel.dotnet.core {
                 byte[] buffer = new byte[100];
                 string req = tunnel.ReadStringL ();
                 if (!string.IsNullOrEmpty (req)) {
-                    if (EagleTunnelUser.TryParse (req, out EagleTunnelUser user)) {
+                    if (EagleTunnelUser.TryParse (req, out EagleTunnelUser user, false)) {
                         if (Conf.Users.ContainsKey (user.ID)) {
                             result = Conf.Users[user.ID].CheckAuthen (user.Password);
                             if (result) {
