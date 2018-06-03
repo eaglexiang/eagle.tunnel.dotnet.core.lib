@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Net;
+using System.Text;
 using System.Threading;
 
 namespace eagle.tunnel.dotnet.core {
@@ -88,22 +89,29 @@ namespace eagle.tunnel.dotnet.core {
             return result;
         }
 
-        private static bool CheckIfInside (string ip) {
-            bool result = false;
+        private static string CheckIfInside (string ip) {
+            string result = "failed";
             string req = @"https://ip2c.org/" + ip;
             string reply = "";
-            using (WebClient client = new WebClient ()) {
-                try {
-                    reply = client.DownloadString (req);
-                } catch (WebException) {; }
-                if (!string.IsNullOrEmpty (reply)) {
-                    if (reply == @"1;CN;CHN;China") {
-                        result = true;
-                    } else if (reply == @"1;ZZ;ZZZ;Reserved") {
-                        result = true;
+            HttpWebRequest httpReq = HttpWebRequest.CreateHttp (req);
+            try {
+                using (HttpWebResponse httpRes = httpReq.GetResponse () as HttpWebResponse) {
+                    using (System.IO.Stream stream = httpRes.GetResponseStream ()) {
+                        byte[] buffer = new byte[1024];
+                        int bytes = stream.Read (buffer, 0, buffer.Length);
+                        reply = Encoding.UTF8.GetString (buffer, 0, bytes);
                     }
                 }
-            };
+            } catch {; }
+            if (!string.IsNullOrEmpty (reply)) {
+                if (reply == @"1;CN;CHN;China") {
+                    result = "in";
+                } else if (reply == @"1;ZZ;ZZZ;Reserved") {
+                    result = "in";
+                } else {
+                    result = "out";
+                }
+            }
             return result;
         }
 
@@ -114,22 +122,25 @@ namespace eagle.tunnel.dotnet.core {
             new ConcurrentQueue<string> ();
 
         private static bool IsRunning;
-        private static int time2Wait = 1000;
-        private static int maxTime2Wait = 10000;
+        private static int time2Wait = 10000;
         private static void HandleIp2Resolve () {
             while (IsRunning) {
                 while (ip2Resolv.Count > 0) {
                     if (ip2Resolv.TryDequeue (out string ip)) {
                         if (!insideCache.ContainsKey (ip)) {
-                            bool result = CheckIfInside (ip);
-                            if (insideCache.TryAdd (ip, result)) {
-                                time2Wait = 1000;
+                            string result = CheckIfInside (ip);
+                            switch (result) {
+                                case "in":
+                                    insideCache.TryAdd (ip, true);
+                                    break;
+                                case "out":
+                                    insideCache.TryAdd (ip, false);
+                                    break;
+                                case "failed":
+                                    break;
+                                default:
+                                    break;
                             }
-                        }
-                    } else {
-                        time2Wait += 1000;
-                        if (time2Wait > maxTime2Wait) {
-                            time2Wait = maxTime2Wait;
                         }
                     }
                 }
