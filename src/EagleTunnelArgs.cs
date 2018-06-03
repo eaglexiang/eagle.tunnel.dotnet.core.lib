@@ -99,6 +99,8 @@ namespace eagle.tunnel.dotnet.core {
                 if (!string.IsNullOrEmpty (reply)) {
                     if (reply == @"1;CN;CHN;China") {
                         result = true;
+                    } else if (reply == @"1;ZZ;ZZZ;Reserved") {
+                        result = true;
                     }
                 }
             };
@@ -120,8 +122,9 @@ namespace eagle.tunnel.dotnet.core {
                     if (ip2Resolv.TryDequeue (out string ip)) {
                         if (!insideCache.ContainsKey (ip)) {
                             bool result = CheckIfInside (ip);
-                            insideCache.TryAdd (ip, result);
-                            time2Wait = 1000;
+                            if (insideCache.TryAdd (ip, result)) {
+                                time2Wait = 1000;
+                            }
                         }
                     } else {
                         time2Wait += 1000;
