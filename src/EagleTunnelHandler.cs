@@ -20,8 +20,8 @@ namespace eagle.tunnel.dotnet.core {
                 tunnel != null) {
                 result = CheckVersion (firstMsg, tunnel);
                 if (result) {
-                    result = CheckAuthen (tunnel);
-                    if (result) {
+                    EagleTunnelUser user = CheckAuthen (tunnel);
+                    if (user != null) {
                         string req = tunnel.ReadStringL ();
                         if (!string.IsNullOrEmpty (req)) {
                             EagleTunnelRequestType type = GetType (req);
@@ -32,6 +32,9 @@ namespace eagle.tunnel.dotnet.core {
                                     break;
                                 case EagleTunnelRequestType.TCP:
                                     result = TCPReqHandle (req, tunnel);
+                                    if(result){
+                                        user.AddTunnel(tunnel);
+                                    }
                                     break;
                             }
                         }
@@ -68,26 +71,20 @@ namespace eagle.tunnel.dotnet.core {
             return result;
         }
 
-        private static bool CheckAuthen (Tunnel tunnel) {
-            bool result = false;
+        private static EagleTunnelUser CheckAuthen (Tunnel tunnel) {
+            EagleTunnelUser result = null;
             if (Conf.allConf.ContainsKey ("user-check") && Conf.allConf["user-check"][0] == "on") {
                 byte[] buffer = new byte[100];
                 string req = tunnel.ReadStringL ();
                 if (!string.IsNullOrEmpty (req)) {
                     if (EagleTunnelUser.TryParse (req, out EagleTunnelUser user, false)) {
-                        if (Conf.Users.ContainsKey (user.ID)) {
-                            result = Conf.Users[user.ID].CheckAuthen (user.Password);
-                            if (result) {
-                                Conf.Users[user.ID].AddTunnel (tunnel);
-                            }
-                        }
+                        result = EagleTunnelUser.Check(user.ID, user.Password);
                     }
                 }
-                string reply = result ? "valid" : "invalid";
-                result &= tunnel.WriteL (reply);
+                string reply = result != null ? "valid" : "invalid";
+                result = tunnel.WriteL (reply) ? result : null;
             } else {
-                Conf.Users["anonymous"].AddTunnel (tunnel);
-                result = true;
+                result = EagleTunnelUser.users["anonymous"];
             }
             return result;
         }

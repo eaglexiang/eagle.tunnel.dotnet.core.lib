@@ -1,9 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
-using System;
 
 namespace eagle.tunnel.dotnet.core {
     public class EagleTunnelUser {
+        public static ConcurrentDictionary<string, EagleTunnelUser> users =
+            new ConcurrentDictionary<string, EagleTunnelUser> ();
         public string ID { get; }
         public string Password { get; set; }
         public int SpeedLimit { get; set; } // B/s
@@ -13,7 +15,7 @@ namespace eagle.tunnel.dotnet.core {
         private int bytesLastChecked;
         DateTime timeLastChecked;
 
-        public EagleTunnelUser (string id, string password, bool enableSpeedChecker) {
+        private EagleTunnelUser (string id, string password, bool enableSpeedChecker) {
             ID = id;
             Password = password;
             SpeedLimit = 0;
@@ -32,7 +34,8 @@ namespace eagle.tunnel.dotnet.core {
             }
         }
 
-        public static bool TryParse (string parameter, out EagleTunnelUser user, bool enableSpeedChecker) {
+        public static bool TryParse (string parameter, out EagleTunnelUser user,
+            bool enableSpeedChecker = false) {
             user = null;
             if (parameter != null) {
                 string[] args = parameter.Split (':');
@@ -55,6 +58,26 @@ namespace eagle.tunnel.dotnet.core {
                 }
             }
             return false;
+        }
+
+        public static bool TryAdd (string parameter) {
+            bool result = false;
+            if (TryParse (parameter, out EagleTunnelUser newUser, true)) {
+                if (users.TryAdd (newUser.ID, newUser)) {
+                    result = true;
+                }
+            }
+            return result;
+        }
+
+        public static EagleTunnelUser Check (string id, string password) {
+            EagleTunnelUser result = null;
+            if (users.ContainsKey (id)) {
+                if (users[id].CheckAuthen (password)) {
+                    result = users[id];
+                }
+            }
+            return result;
         }
 
         public void AddTunnel (Tunnel tunnel2Add) {
@@ -93,13 +116,15 @@ namespace eagle.tunnel.dotnet.core {
                         bytesNow += tunnel.BytesTransffered;
                         if (tunnel.IsFlowing) {
                             tunnels.Enqueue (tunnel);
+                        } else {
+                            tunnel.Close ();
                         }
                     }
                 }
             }
             DateTime timeNow = DateTime.Now;
             double seconds = (timeNow - timeLastChecked).TotalSeconds;
-            double speed = ((double)(bytesNow - bytesLastChecked))/seconds;
+            double speed = ((double) (bytesNow - bytesLastChecked)) / seconds;
             timeLastChecked = timeNow;
             bytesLastChecked = bytesNow;
             return speed;

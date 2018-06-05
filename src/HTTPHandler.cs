@@ -15,6 +15,7 @@ namespace eagle.tunnel.dotnet.core {
                     if (tmpTunnel != null) {
                         tunnel.SocketR = tmpTunnel.SocketR;
                         tunnel.EncryptR = tmpTunnel.EncryptR;
+                        Conf.LocalUser.AddTunnel(tunnel);
                         if (e0.HTTP_Request_Type == HTTPRequestType.CONNECT) {
                             // HTTPS: reply web client;
                             string re443 = "HTTP/1.1 200 Connection Established\r\n\r\n";

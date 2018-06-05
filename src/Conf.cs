@@ -133,7 +133,6 @@ namespace eagle.tunnel.dotnet.core {
             }
         }
         public static ConcurrentDictionary<string, List<string>> allConf;
-        public static ConcurrentDictionary<string, EagleTunnelUser> Users;
         public static int maxClientsCount;
         private static IPEndPoint[] localAddresses;
         public static IPEndPoint[] LocalAddresses {
@@ -242,7 +241,7 @@ namespace eagle.tunnel.dotnet.core {
             ReadAll ();
 
             ImportUsers ();
-            Console.WriteLine ("find user(s): {0}", Users.Count);
+            Console.WriteLine ("find user(s): {0}", EagleTunnelUser.users.Count);
 
             if (allConf.ContainsKey ("user")) {
                 if (EagleTunnelUser.TryParse (allConf["user"][0], out EagleTunnelUser user, true)) {
@@ -359,17 +358,15 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         private static void ImportUsers () {
-            Users = new ConcurrentDictionary<string, EagleTunnelUser> ();
-            Users.TryAdd ("anonymous", new EagleTunnelUser ("anonymous", "anonymous", true));
             if (allConf.ContainsKey ("user-check") &&
                 allConf["user-check"][0] == "on") {
                 ImportList ("users.list", out ArrayList users);
                 for (int i = 0; i < users.Count; ++i) {
                     string line = users[i] as string;
-                    if (EagleTunnelUser.TryParse (line, out EagleTunnelUser user, true)) {
-                        Users.TryAdd (user.ID, user);
-                    }
+                    EagleTunnelUser.TryAdd(line);
                 }
+            } else {
+                EagleTunnelUser.TryAdd ("anoymous:anoymous");
             }
         }
 

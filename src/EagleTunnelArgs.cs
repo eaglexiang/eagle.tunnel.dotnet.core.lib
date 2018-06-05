@@ -5,6 +5,7 @@ using System.Threading;
 
 namespace eagle.tunnel.dotnet.core {
     public class EagleTunnelArgs {
+        public EagleTunnelUser User { get; set; }
         private string domain;
         public string Domain {
             get {

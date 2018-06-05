@@ -163,10 +163,8 @@ namespace eagle.tunnel.dotnet.core {
 
         public static double Speed () {
             double speed = 0;
-            if (Conf.Users != null) {
-                foreach (EagleTunnelUser item in Conf.Users.Values) {
-                    speed += item.Speed;
-                }
+            foreach (EagleTunnelUser item in EagleTunnelUser.users.Values) {
+                speed += item.Speed;
             }
             if (Conf.LocalUser != null) {
                 speed += Conf.LocalUser.Speed;
@@ -180,7 +178,7 @@ namespace eagle.tunnel.dotnet.core {
                     if (Conf.allConf.ContainsKey ("speed-limit")) {
                         if (Conf.allConf["speed-limit"][0] == "on") {
                             while (IsRunning) {
-                                foreach (EagleTunnelUser item in Conf.Users.Values) {
+                                foreach (EagleTunnelUser item in EagleTunnelUser.users.Values) {
                                     item.LimitSpeedAsync ();
                                 }
                                 Thread.Sleep (5000);
