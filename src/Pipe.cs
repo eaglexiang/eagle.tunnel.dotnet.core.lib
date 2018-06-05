@@ -7,7 +7,7 @@ using System.Threading;
 namespace eagle.tunnel.dotnet.core {
     public class Pipe {
         public string UserFrom { get; set; }
-        public ulong BytesTransferred { get; private set; }
+        public int BytesTransferred { get; private set; }
         public Socket SocketFrom { get; set; }
         public Socket SocketTo { get; set; }
         public bool EncryptFrom { get; set; }
@@ -88,7 +88,7 @@ namespace eagle.tunnel.dotnet.core {
                         tmpBuffer = Decrypt (tmpBuffer);
                     }
                     result = tmpBuffer;
-                    BytesTransferred += (uint)count;
+                    BytesTransferred += count;
                     Wait ();
                 }
             }

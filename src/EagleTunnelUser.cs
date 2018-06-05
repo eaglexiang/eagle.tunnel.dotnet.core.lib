@@ -6,11 +6,11 @@ namespace eagle.tunnel.dotnet.core {
     public class EagleTunnelUser {
         public string ID { get; }
         public string Password { get; set; }
-        public int SpeedLimit { get; set; } // KB/s
+        public int SpeedLimit { get; set; } // B/s
         private object lockOfSpeedCheck;
         private ConcurrentQueue<Tunnel> tunnels;
         private object IsWaiting;
-        private ulong bytesLastChecked;
+        private int bytesLastChecked;
         DateTime timeLastChecked;
 
         public EagleTunnelUser (string id, string password, bool enableSpeedChecker) {
@@ -84,7 +84,7 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         private double _Speed () {
-            ulong bytesNow = 0;
+            int bytesNow = 0;
             for (int i = tunnels.Count; i > 0; --i) {
                 if (tunnels.TryDequeue (out Tunnel tunnel)) {
                     if (tunnel.IsOpening) {
@@ -102,7 +102,7 @@ namespace eagle.tunnel.dotnet.core {
             double speed = ((double)(bytesNow - bytesLastChecked))/seconds;
             timeLastChecked = timeNow;
             bytesLastChecked = bytesNow;
-            return speed / 1024;
+            return speed;
         }
 
         public void LimitSpeedAsync () {
