@@ -50,7 +50,9 @@ namespace eagle.tunnel.dotnet.core {
                     if (tmpTunnel != null) {
                         tunnel.SocketR = tmpTunnel.SocketR;
                         tunnel.EncryptR = tmpTunnel.EncryptR;
-                        Conf.LocalUser.AddTunnel(tunnel);
+                        if(Conf.LocalUser!=null){
+                            Conf.LocalUser.AddTunnel(tunnel);
+                        }
                         if (tmpTunnel != null) {
                             reply = "\u0005\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000";
                         } else {
