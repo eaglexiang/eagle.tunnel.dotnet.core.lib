@@ -57,7 +57,7 @@ namespace eagle.tunnel.dotnet.core {
             }
         }
 
-        public long BytesTransffered {
+        public ulong BytesTransffered {
             get {
                 return pipeL2R.BytesTransferred + pipeR2L.BytesTransferred;
             }

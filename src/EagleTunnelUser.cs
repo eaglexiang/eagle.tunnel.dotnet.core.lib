@@ -10,7 +10,7 @@ namespace eagle.tunnel.dotnet.core {
         private object lockOfSpeedCheck;
         private ConcurrentQueue<Tunnel> tunnels;
         private object IsWaiting;
-        private long bytesLastChecked;
+        private ulong bytesLastChecked;
         DateTime timeLastChecked;
 
         public EagleTunnelUser (string id, string password, bool enableSpeedChecker) {
@@ -84,7 +84,7 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         private double _Speed () {
-            long bytesNow = 0;
+            ulong bytesNow = 0;
             for (int i = tunnels.Count; i > 0; --i) {
                 if (tunnels.TryDequeue (out Tunnel tunnel)) {
                     if (tunnel.IsOpening) {
@@ -99,7 +99,7 @@ namespace eagle.tunnel.dotnet.core {
             }
             DateTime timeNow = DateTime.Now;
             double seconds = (timeNow - timeLastChecked).TotalSeconds;
-            double speed = (bytesNow - bytesLastChecked)/seconds;
+            double speed = ((double)(bytesNow - bytesLastChecked))/seconds;
             timeLastChecked = timeNow;
             bytesLastChecked = bytesNow;
             return speed / 1024;
