@@ -85,11 +85,9 @@ namespace eagle.tunnel.dotnet.core {
                     if (tunnel.IsOpening) {
                         tunnels.Enqueue (tunnel);
                     } else {
+                        speed += tunnel.Speed ();
                         if (tunnel.IsFlowing) {
-                            speed += tunnel.Speed ();
                             tunnels.Enqueue (tunnel);
-                        } else {
-                            tunnel.Close ();
                         }
                     }
                 }
