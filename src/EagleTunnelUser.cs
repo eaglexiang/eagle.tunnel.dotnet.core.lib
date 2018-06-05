@@ -102,7 +102,7 @@ namespace eagle.tunnel.dotnet.core {
         private void CheckingSpeed () {
             while (true) {
                 Speed = _Speed ();
-                System.Threading.Thread.Sleep (2000);
+                System.Threading.Thread.Sleep (500);
             }
         }
 
@@ -142,7 +142,7 @@ namespace eagle.tunnel.dotnet.core {
                 while (Speed > SpeedLimit) {
                     bool IsWaiting = (bool) this.IsWaiting;
                     IsWaiting = true;
-                    System.Threading.Thread.Sleep (2000);
+                    System.Threading.Thread.Sleep (1000);
                 }
                 IsWaiting = false;
             }
