@@ -29,9 +29,9 @@ namespace eagle.tunnel.dotnet.core {
                             Path.DirectorySeparatorChar + "whitelist_ip.txt";
                         try {
                             if (File.Exists (path)) {
-                                File.AppendAllText (path, value + '\n');
+                                File.AppendAllText (path, value + Environment.NewLine);
                             } else {
-                                File.WriteAllText (path, value + '\n');
+                                File.WriteAllText (path, value + Environment.NewLine);
                             }
                         } catch (UnauthorizedAccessException) {; }
                     }
@@ -52,9 +52,9 @@ namespace eagle.tunnel.dotnet.core {
                             Path.DirectorySeparatorChar + "blacklist_ip.txt";
                         try {
                             if (File.Exists (path)) {
-                                File.AppendAllText (path, value + '\n');
+                                File.AppendAllText (path, value + Environment.NewLine);
                             } else {
-                                File.WriteAllText (path, value + '\n');
+                                File.WriteAllText (path, value + Environment.NewLine);
                             }
                         } catch (UnauthorizedAccessException) {; }
                     }
@@ -399,7 +399,7 @@ namespace eagle.tunnel.dotnet.core {
             string result = "";
             foreach (string key in allConf.Keys) {
                 foreach (string value in allConf[key]) {
-                    result += (key + '=' + value + '\n');
+                    result += (key + '=' + value + Environment.NewLine);
                 }
             }
             return result;
