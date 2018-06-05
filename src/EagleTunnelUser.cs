@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Concurrent;
+using System;
 
 namespace eagle.tunnel.dotnet.core {
     public class EagleTunnelUser {
@@ -9,6 +10,8 @@ namespace eagle.tunnel.dotnet.core {
         private object lockOfSpeedCheck;
         private ConcurrentQueue<Tunnel> tunnels;
         private object IsWaiting;
+        private long bytesLastChecked;
+        DateTime timeLastChecked;
 
         public EagleTunnelUser (string id, string password, bool enableSpeedChecker) {
             ID = id;
@@ -18,6 +21,8 @@ namespace eagle.tunnel.dotnet.core {
             lockOfSpeedCheck = new object ();
             IsWaiting = false;
             speedNow = 0;
+            bytesLastChecked = 0;
+            timeLastChecked = DateTime.Now;
 
             if (enableSpeedChecker) {
                 System.Threading.Thread thread_CheckSpeed =
@@ -74,24 +79,29 @@ namespace eagle.tunnel.dotnet.core {
         private void CheckingSpeed () {
             while (true) {
                 Speed = _Speed ();
-                System.Threading.Thread.Sleep (1000);
+                System.Threading.Thread.Sleep (5000);
             }
         }
 
         private double _Speed () {
-            double speed = 0;
+            long bytesNow = 0;
             for (int i = tunnels.Count; i > 0; --i) {
                 if (tunnels.TryDequeue (out Tunnel tunnel)) {
                     if (tunnel.IsOpening) {
                         tunnels.Enqueue (tunnel);
                     } else {
-                        speed += tunnel.Speed ();
+                        bytesNow += tunnel.BytesTransffered;
                         if (tunnel.IsFlowing) {
                             tunnels.Enqueue (tunnel);
                         }
                     }
                 }
             }
+            DateTime timeNow = DateTime.Now;
+            double seconds = (timeNow - timeLastChecked).TotalSeconds;
+            double speed = (bytesNow - bytesLastChecked)/seconds;
+            timeLastChecked = timeNow;
+            bytesLastChecked = bytesNow;
             return speed / 1024;
         }
 

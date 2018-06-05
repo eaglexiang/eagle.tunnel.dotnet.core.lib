@@ -7,8 +7,7 @@ using System.Threading;
 namespace eagle.tunnel.dotnet.core {
     public class Pipe {
         public string UserFrom { get; set; }
-        private long bytesTransferred;
-        private long bytesLastChecked;
+        public long BytesTransferred { get; private set; }
         public Socket SocketFrom { get; set; }
         public Socket SocketTo { get; set; }
         public bool EncryptFrom { get; set; }
@@ -17,7 +16,6 @@ namespace eagle.tunnel.dotnet.core {
         private byte[] bufferRead;
         public bool IsRunning { get; private set; }
         public object IsWaiting { get; set; }
-        private DateTime timeLastChecked;
 
         public Pipe (Socket from = null, Socket to = null, string user = null) {
             SocketFrom = from;
@@ -26,11 +24,9 @@ namespace eagle.tunnel.dotnet.core {
             EncryptTo = false;
 
             UserFrom = user;
-            bytesTransferred = 0;
-            bytesLastChecked = 0;
+            BytesTransferred = 0;
             bufferRead = new byte[2048];
             IsRunning = false;
-            timeLastChecked = DateTime.Now;
         }
 
         public bool Write (byte[] buffer, int offset, int count) {
@@ -92,7 +88,7 @@ namespace eagle.tunnel.dotnet.core {
                         tmpBuffer = Decrypt (tmpBuffer);
                     }
                     result = tmpBuffer;
-                    bytesTransferred += count;
+                    BytesTransferred += count;
                     Wait ();
                 }
             }
@@ -170,17 +166,6 @@ namespace eagle.tunnel.dotnet.core {
                     SocketTo.Close ();
                 }
             }
-        }
-
-        public double Speed () {
-            DateTime timeNow = DateTime.Now;
-            long bytesNow = bytesTransferred;
-            double seconds = (timeNow - timeLastChecked).TotalSeconds;
-            long bytes = bytesNow - bytesLastChecked;
-            double speed = bytes / seconds;
-            bytesLastChecked = bytesNow;
-            timeLastChecked = timeNow;
-            return speed;
         }
     }
 }

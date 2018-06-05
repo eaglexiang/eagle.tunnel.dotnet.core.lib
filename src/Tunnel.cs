@@ -15,16 +15,6 @@ namespace eagle.tunnel.dotnet.core {
             }
         }
 
-        public double Speed () {
-            double speed;
-            if (IsFlowing) {
-                speed = pipeL2R.Speed () + pipeR2L.Speed ();
-            } else {
-                speed = 0;
-            }
-            return speed;
-        }
-
         public Socket SocketL {
             get {
                 return pipeL2R.SocketFrom;
@@ -67,6 +57,12 @@ namespace eagle.tunnel.dotnet.core {
             }
         }
 
+        public long BytesTransffered {
+            get {
+                return pipeL2R.BytesTransferred + pipeR2L.BytesTransferred;
+            }
+        }
+
         public bool IsFlowing {
             get {
                 bool result;
@@ -95,22 +91,22 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         public void Close () {
-            if(SocketL != null){
-                if(SocketL.Connected){
-                    try{
-                        SocketL.Shutdown(SocketShutdown.Both);
-                    }catch{;}
-                    System.Threading.Thread.Sleep(10);
-                    SocketL.Close();
+            if (SocketL != null) {
+                if (SocketL.Connected) {
+                    try {
+                        SocketL.Shutdown (SocketShutdown.Both);
+                    } catch {; }
+                    System.Threading.Thread.Sleep (10);
+                    SocketL.Close ();
                 }
             }
-            if(SocketR != null){
-                if(SocketR.Connected){
-                    try{
-                        SocketR.Shutdown(SocketShutdown.Both);
-                    }catch{;}
-                    System.Threading.Thread.Sleep(10);
-                    SocketR.Close();
+            if (SocketR != null) {
+                if (SocketR.Connected) {
+                    try {
+                        SocketR.Shutdown (SocketShutdown.Both);
+                    } catch {; }
+                    System.Threading.Thread.Sleep (10);
+                    SocketR.Close ();
                 }
             }
             IsOpening = false;
