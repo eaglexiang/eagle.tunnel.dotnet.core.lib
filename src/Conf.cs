@@ -164,7 +164,7 @@ namespace eagle.tunnel.dotnet.core {
                 }
             }
         }
-        public static int DnsCacheTti { get; set; } = 600; // default 10 m
+        public static int DnsCacheTti { get; set; } = 60; // default 60s
 
         private static object lockOfIndex;
 

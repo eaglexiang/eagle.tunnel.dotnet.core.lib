@@ -140,18 +140,20 @@ namespace eagle.tunnel.dotnet.core {
         private static IPAddress ResolvDomain (EagleTunnelArgs e) {
             IPAddress result = null;
             int times = 3;
-            while (result == null && times-- > 0) {
-                result = _ResolvDomain (e);
-            }
-            return result;
-        }
-
-        private static IPAddress _ResolvDomain (EagleTunnelArgs e) {
-            IPAddress result = null;
             if (e.EnableProxy) {
-                result = ResolvByProxy (e.Domain);
+                while (result == null && times-- > 0) {
+                    result = ResolvByProxy (e.Domain);
+                }
             } else {
-                result = ResolvByLocal (e.Domain);
+                while (result == null && times-- > 0) {
+                    result = ResolvByLocal (e.Domain);
+                }
+                if (result == null) {
+                    times = 3;
+                    while (result == null && times-- > 0) {
+                        result = ResolvByProxy (e.Domain);
+                    }
+                }
             }
             return result;
         }
@@ -228,8 +230,8 @@ namespace eagle.tunnel.dotnet.core {
                 ProtocolType.Tcp);
             try {
                 socket2Server.Connect (e.EndPoint);
-            } catch (SocketException){
-                socket2Server.Close();
+            } catch (SocketException) {
+                socket2Server.Close ();
             }
             if (socket2Server.Connected) {
                 tunnel = new Tunnel (null, socket2Server);

@@ -15,18 +15,18 @@ namespace eagle.tunnel.dotnet.core {
             }
         }
         public DateTime TimeModified { get; private set; }
-        public int TTI { get; set; }
+        public int TTL { get; set; }
         public bool IsDead {
             get {
                 double seconds = (DateTime.Now - TimeModified).TotalSeconds;
-                return seconds >= TTI && IP != null;
+                return seconds >= TTL && IP != null;
             }
         }
 
-        public DnsCache (string domain, IPAddress ip, int tti) {
+        public DnsCache (string domain, IPAddress ip, int ttl) {
             Domain = domain;
             IP = ip;
-            TTI = tti;
+            TTL = ttl;
         }
     }
 }
