@@ -126,26 +126,26 @@ namespace eagle.tunnel.dotnet.core {
         private static int time2Wait = 10000;
         private static void HandleIp2Resolve () {
             while (IsRunning) {
-                while (ip2Resolv.Count > 0) {
-                    if (ip2Resolv.TryDequeue (out string ip)) {
-                        if (!insideCache.ContainsKey (ip)) {
-                            string result = CheckIfInside (ip);
-                            switch (result) {
-                                case "in":
-                                    insideCache.TryAdd (ip, true);
-                                    break;
-                                case "out":
-                                    insideCache.TryAdd (ip, false);
-                                    break;
-                                case "failed":
-                                    break;
-                                default:
-                                    break;
-                            }
+                if (ip2Resolv.IsEmpty) {
+                    Thread.Sleep (time2Wait);
+                }
+                if (ip2Resolv.TryDequeue (out string ip)) {
+                    if (!insideCache.ContainsKey (ip)) {
+                        string result = CheckIfInside (ip);
+                        switch (result) {
+                            case "in":
+                                insideCache.TryAdd (ip, true);
+                                break;
+                            case "out":
+                                insideCache.TryAdd (ip, false);
+                                break;
+                            case "failed":
+                                break;
+                            default:
+                                break;
                         }
                     }
                 }
-                Thread.Sleep (time2Wait);
             }
         }
 
