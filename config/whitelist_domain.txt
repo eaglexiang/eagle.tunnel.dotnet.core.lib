@@ -1,6 +1,7 @@
 google.com
 co.jp
 youtube.com
+youtu.be
 gstatic.com
 googlevideo.com
 twitter.com
