@@ -34,17 +34,13 @@ namespace eagle.tunnel.dotnet.core {
             IsRunning = false;
 
             buffers = new ConcurrentQueue<byte[]> ();
-            threadRead = new Thread (threadRead_Handler);
-            threadRead.IsBackground = true;
-            threadWrite = new Thread (threadWrite_Handler);
-            threadWrite.IsBackground = true;
         }
 
         private void threadRead_Handler () {
             while (IsRunning) {
                 byte[] buffer = ReadByte ();
                 if (buffer == null) {
-                    Close();
+                    Close ();
                 } else {
                     buffers.Enqueue (buffer);
                 }
@@ -146,10 +142,14 @@ namespace eagle.tunnel.dotnet.core {
             //     thread_Flow.IsBackground = true;
             //     thread_Flow.Start ();
             // }
-            if(!IsRunning){
+            if (!IsRunning) {
                 IsRunning = true;
-                threadRead.Start();
-                threadWrite.Start();
+                threadRead = new Thread (threadRead_Handler);
+                threadRead.IsBackground = true;
+                threadRead.Start ();
+                threadWrite = new Thread (threadWrite_Handler);
+                threadWrite.IsBackground = true;
+                threadWrite.Start ();
             }
         }
 
