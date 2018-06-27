@@ -314,8 +314,10 @@ namespace eagle.tunnel.dotnet.core {
 
         private static void ImportList (string filename, out ArrayList list, string path = "") {
             if (path == "") {
-                path = allConf["config-dir"][0] + Path.DirectorySeparatorChar;
-                path += filename;
+                if (allConf.ContainsKey ("config-dir")) {
+                    path = allConf["config-dir"][0] + Path.DirectorySeparatorChar;
+                    path += filename;
+                }
             }
 
             string[] lines;
@@ -363,7 +365,7 @@ namespace eagle.tunnel.dotnet.core {
                 ImportList ("users.list", out ArrayList users);
                 for (int i = 0; i < users.Count; ++i) {
                     string line = users[i] as string;
-                    EagleTunnelUser.TryAdd(line);
+                    EagleTunnelUser.TryAdd (line);
                 }
             } else {
                 EagleTunnelUser.TryAdd ("anoymous:anoymous");
