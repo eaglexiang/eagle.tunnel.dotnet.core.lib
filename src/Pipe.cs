@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
@@ -17,6 +18,10 @@ namespace eagle.tunnel.dotnet.core {
         public bool IsRunning { get; private set; }
         public object IsWaiting { get; set; }
 
+        private Thread threadRead;
+        private Thread threadWrite;
+        private ConcurrentQueue<byte[]> buffers;
+
         public Pipe (Socket from = null, Socket to = null, string user = null) {
             SocketFrom = from;
             SocketTo = to;
@@ -27,6 +32,35 @@ namespace eagle.tunnel.dotnet.core {
             BytesTransferred = 0;
             bufferRead = new byte[2048];
             IsRunning = false;
+
+            buffers = new ConcurrentQueue<byte[]> ();
+            threadRead = new Thread (threadRead_Handler);
+            threadRead.IsBackground = true;
+            threadWrite = new Thread (threadWrite_Handler);
+            threadWrite.IsBackground = true;
+        }
+
+        private void threadRead_Handler () {
+            while (IsRunning) {
+                byte[] buffer = ReadByte ();
+                if (buffer == null) {
+                    Close();
+                } else {
+                    buffers.Enqueue (buffer);
+                }
+            }
+        }
+
+        private void threadWrite_Handler () {
+            while (IsRunning) {
+                if (buffers.TryDequeue (out byte[] buffer)) {
+                    if (!Write (buffer)) {
+                        Close ();
+                    }
+                } else {
+                    Thread.Sleep (100);
+                }
+            }
         }
 
         public bool Write (byte[] buffer, int offset, int count) {
@@ -106,11 +140,16 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         public void Flow () {
-            if (!IsRunning) {
+            // if (!IsRunning) {
+            //     IsRunning = true;
+            //     Thread thread_Flow = new Thread (_Flow);
+            //     thread_Flow.IsBackground = true;
+            //     thread_Flow.Start ();
+            // }
+            if(!IsRunning){
                 IsRunning = true;
-                Thread thread_Flow = new Thread (_Flow);
-                thread_Flow.IsBackground = true;
-                thread_Flow.Start ();
+                threadRead.Start();
+                threadWrite.Start();
             }
         }
 
