@@ -32,8 +32,8 @@ namespace eagle.tunnel.dotnet.core {
                                     break;
                                 case EagleTunnelRequestType.TCP:
                                     result = TCPReqHandle (req, tunnel);
-                                    if(result){
-                                        user.AddTunnel(tunnel);
+                                    if (result) {
+                                        user.AddTunnel (tunnel);
                                     }
                                     break;
                             }
@@ -78,13 +78,15 @@ namespace eagle.tunnel.dotnet.core {
                 string req = tunnel.ReadStringL ();
                 if (!string.IsNullOrEmpty (req)) {
                     if (EagleTunnelUser.TryParse (req, out EagleTunnelUser user, false)) {
-                        result = EagleTunnelUser.Check(user.ID, user.Password);
+                        result = EagleTunnelUser.Check (user.ID, user.Password);
                     }
                 }
                 string reply = result != null ? "valid" : "invalid";
                 result = tunnel.WriteL (reply) ? result : null;
             } else {
-                result = EagleTunnelUser.users["anonymous"];
+                if (EagleTunnelUser.users.ContainsKey ("anonymous")) {
+                    result = EagleTunnelUser.users["anonymous"];
+                }
             }
             return result;
         }

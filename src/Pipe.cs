@@ -36,28 +36,30 @@ namespace eagle.tunnel.dotnet.core {
             buffers = new ConcurrentQueue<byte[]> ();
         }
 
-        private void threadRead_Handler () {
-            while (IsRunning) {
-                byte[] buffer = ReadByte ();
-                if (buffer == null) {
-                    Close ();
-                } else {
-                    buffers.Enqueue (buffer);
-                }
-            }
-        }
+        // private void threadRead_Handler () {
+        //     while (IsRunning) {
+        //         byte[] buffer = ReadByte ();
+        //         if (buffer == null) {
+        //             Close ();
+        //             break;
+        //         } else {
+        //             buffers.Enqueue (buffer);
+        //         }
+        //     }
+        // }
 
-        private void threadWrite_Handler () {
-            while (IsRunning) {
-                if (buffers.TryDequeue (out byte[] buffer)) {
-                    if (!Write (buffer)) {
-                        Close ();
-                    }
-                } else {
-                    Thread.Sleep (100);
-                }
-            }
-        }
+        // private void threadWrite_Handler () {
+        //     while (IsRunning) {
+        //         if (buffers.TryDequeue (out byte[] buffer)) {
+        //             if (!Write (buffer)) {
+        //                 buffers = new ConcurrentQueue<byte[]> ();
+        //                 Close ();
+        //             }
+        //         } else {
+        //             Thread.Sleep (100);
+        //         }
+        //     }
+        // }
 
         public bool Write (byte[] buffer, int offset, int count) {
             bool result = false;
@@ -136,21 +138,21 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         public void Flow () {
-            // if (!IsRunning) {
-            //     IsRunning = true;
-            //     Thread thread_Flow = new Thread (_Flow);
-            //     thread_Flow.IsBackground = true;
-            //     thread_Flow.Start ();
-            // }
             if (!IsRunning) {
                 IsRunning = true;
-                threadRead = new Thread (threadRead_Handler);
-                threadRead.IsBackground = true;
-                threadRead.Start ();
-                threadWrite = new Thread (threadWrite_Handler);
-                threadWrite.IsBackground = true;
-                threadWrite.Start ();
+                Thread thread_Flow = new Thread (_Flow);
+                thread_Flow.IsBackground = true;
+                thread_Flow.Start ();
             }
+            // if (!IsRunning) {
+            //     IsRunning = true;
+            //     threadRead = new Thread (threadRead_Handler);
+            //     threadRead.IsBackground = true;
+            //     threadRead.Start ();
+            //     threadWrite = new Thread (threadWrite_Handler);
+            //     threadWrite.IsBackground = true;
+            //     threadWrite.Start ();
+            // }
         }
 
         private void _Flow () {
@@ -186,7 +188,12 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         public void Close () {
+            while (buffers.Count > 0) {
+                Thread.Sleep (100);
+            }
+
             IsRunning = false;
+
             if (SocketFrom != null) {
                 if (SocketFrom.Connected) {
                     try {
