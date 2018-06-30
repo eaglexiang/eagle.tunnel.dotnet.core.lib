@@ -12,6 +12,7 @@ namespace eagle.tunnel.dotnet.core {
         private static ConcurrentQueue<Tunnel> clients;
         private static Socket[] servers;
         private static IPEndPoint[] localAddresses;
+        private static Thread threadLimitCheck;
         private static bool IsRunning { get; set; } // Server will keep running.
         // Server has started working.
         public static bool IsWorking {
@@ -48,9 +49,11 @@ namespace eagle.tunnel.dotnet.core {
                     Server.localAddresses = localAddresses;
                     IsRunning = true;
 
-                    Thread threadLimitCheck = new Thread (LimitSpeed);
-                    threadLimitCheck.IsBackground = true;
-                    threadLimitCheck.Start ();
+                    if (threadLimitCheck == null) {
+                        threadLimitCheck = new Thread (LimitSpeed);
+                        threadLimitCheck.IsBackground = true;
+                        threadLimitCheck.Start ();
+                    }
 
                     for (int i = 1; i < localAddresses.Length; ++i) {
                         ListenAsync (i);
