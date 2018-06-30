@@ -150,16 +150,20 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         public static void StartResolvInside () {
-            IsRunning = true;
-            Thread thread_Resolv = new Thread (HandleIp2Resolve);
-            thread_Resolv.IsBackground = true;
-            thread_Resolv.Start ();
+            if (IsRunning == false) {
+                IsRunning = true;
+                Thread thread_Resolv = new Thread (HandleIp2Resolve);
+                thread_Resolv.IsBackground = true;
+                thread_Resolv.Start ();
+            }
         }
 
         public static void DisposeAll () {
-            IsRunning = false;
-            Thread.Sleep (time2Wait * 2 + 100);
-            insideCache.Clear ();
+            if (IsRunning == true) {
+                IsRunning = false;
+                Thread.Sleep (time2Wait * 2 + 100);
+                insideCache.Clear ();
+            }
         }
     }
 }
