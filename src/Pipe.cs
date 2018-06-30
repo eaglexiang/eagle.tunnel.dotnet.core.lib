@@ -18,9 +18,9 @@ namespace eagle.tunnel.dotnet.core {
         public bool IsRunning { get; private set; }
         public object IsWaiting { get; set; }
 
-        private Thread threadRead;
-        private Thread threadWrite;
-        private ConcurrentQueue<byte[]> buffers;
+        // private Thread threadRead;
+        // private Thread threadWrite;
+        // private ConcurrentQueue<byte[]> buffers;
 
         public Pipe (Socket from = null, Socket to = null, string user = null) {
             SocketFrom = from;
@@ -33,7 +33,7 @@ namespace eagle.tunnel.dotnet.core {
             bufferRead = new byte[2048];
             IsRunning = false;
 
-            buffers = new ConcurrentQueue<byte[]> ();
+            // buffers = new ConcurrentQueue<byte[]> ();
         }
 
         // private void threadRead_Handler () {
@@ -188,9 +188,9 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         public void Close () {
-            while (buffers.Count > 0) {
-                Thread.Sleep (100);
-            }
+            // while (buffers.Count > 0) {
+            //     Thread.Sleep (100);
+            // }
 
             IsRunning = false;
 

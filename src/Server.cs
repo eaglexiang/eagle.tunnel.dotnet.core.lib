@@ -7,12 +7,15 @@ using System.Threading;
 
 namespace eagle.tunnel.dotnet.core {
     public class Server {
-        public static string Version { get; } = "1.9.0";
+        public static string Version { get; } = "1.10.0";
         public static string ProtocolVersion { get; } = "1.0";
         private static ConcurrentQueue<Tunnel> clients;
         private static Socket[] servers;
         private static IPEndPoint[] localAddresses;
         private static Thread threadLimitCheck;
+        private const int maxReqGotNumber = 100;
+        private static int[] reqGotNumbers;
+        private static object[] locksOfReqGotNumbers;
         private static bool IsRunning { get; set; } // Server will keep running.
         // Server has started working.
         public static bool IsWorking {
@@ -46,6 +49,8 @@ namespace eagle.tunnel.dotnet.core {
 
                     clients = new ConcurrentQueue<Tunnel> ();
                     servers = new Socket[localAddresses.Length];
+                    reqGotNumbers = new int[localAddresses.Length];
+                    locksOfReqGotNumbers = new object[localAddresses.Length];
                     Server.localAddresses = localAddresses;
                     IsRunning = true;
 
@@ -94,40 +99,52 @@ namespace eagle.tunnel.dotnet.core {
             IPEndPoint ipep = localAddresses[ipepIndex];
             Socket server = CreateServer (ipep);
             if (server != null) {
-                lock (servers) {
-                    servers[ipepIndex] = server;
-                }
+                // init lists
+                servers[ipepIndex] = server;
+                locksOfReqGotNumbers[ipepIndex] = new object ();
+                reqGotNumbers[ipepIndex] = 0;
+                // listen
                 server.Listen (100);
                 Console.WriteLine ("start to Listen: {0}",
                     server.LocalEndPoint.ToString ());
+                // socket connections handle
                 while (IsRunning) {
-                    try {
-                        Socket client = server.Accept ();
-                        HandleClient (client);
-                    } catch (SocketException se) {
-                        Console.WriteLine ("{0}",
-                            se.Message);
-                        break;
-                    } catch (ObjectDisposedException) {;
-                    } catch (Exception e) {
-                        Console.WriteLine ("error: unexpected exception: {0}",
-                            e.Message);
+                    if (reqGotNumbers[ipepIndex] > maxReqGotNumber) {
+                        Thread.Sleep (100); // wait until reqGotNumber <= maxReqGotNumber
+                    } else {
+                        try {
+                            Socket client = server.Accept ();
+                            // set timeout to avoid ddos
+                            client.SendTimeout = 5000;
+                            client.ReceiveTimeout = 5000;
+                            lock (locksOfReqGotNumbers[ipepIndex]) {
+                                reqGotNumbers[ipepIndex] += 1;
+                            }
+                            HandleClientAsync (client, ipepIndex);
+                        } catch (SocketException se) {
+                            Console.WriteLine ("{0}",
+                                se.Message);
+                            break;
+                        } catch (ObjectDisposedException) {; }
                     }
                 }
             } else {
-                Console.WriteLine ("error: server created: {0}", ipep.ToString ());
+                Console.WriteLine ("error: fail to create server -> {0}", ipep.ToString ());
             }
         }
 
-        private static void HandleClient (Socket socket2Client) {
+        private static void HandleClientAsync (Socket socket2Client, int ipepIndex) {
             Thread threadHandleClient = new Thread (_handleClient);
             threadHandleClient.IsBackground = true;
-            threadHandleClient.Start (socket2Client);
+            object[] args = new object[2] { socket2Client, ipepIndex };
+            threadHandleClient.Start (args);
         }
 
-        private static void _handleClient (object socket2ClientObj) {
-            Socket socket2Client = socket2ClientObj as Socket;
-            Tunnel tunnel2Add = new Tunnel (socket2ClientObj as Socket);
+        private static void _handleClient (object argsObj) {
+            object[] args = argsObj as object[];
+            Socket socket2Client = args[0] as Socket;
+            int ipepIndex = (int) args[1];
+            Tunnel tunnel2Add = new Tunnel (socket2Client);
 
             while (clients.Count >= Conf.maxClientsCount) {
                 if (clients.TryDequeue (out Tunnel tunnel2Close)) {
@@ -161,6 +178,9 @@ namespace eagle.tunnel.dotnet.core {
                         }
                     }
                 }
+            }
+            lock (locksOfReqGotNumbers[ipepIndex]) {
+                reqGotNumbers[ipepIndex] -= 1;
             }
         }
 

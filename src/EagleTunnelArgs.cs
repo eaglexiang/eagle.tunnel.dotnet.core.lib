@@ -122,7 +122,7 @@ namespace eagle.tunnel.dotnet.core {
         private static ConcurrentQueue<string> ip2Resolv =
             new ConcurrentQueue<string> ();
 
-        private static bool IsRunning;
+        private static bool IsRunning = false;
         private static int time2Wait = 10000;
         private static void HandleIp2Resolve () {
             while (IsRunning) {
