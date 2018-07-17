@@ -8,6 +8,8 @@ namespace eagle.tunnel.dotnet.core {
         private static ConcurrentDictionary<string, DnsCache> dnsCaches =
             new ConcurrentDictionary<string, DnsCache> ();
 
+        public static ConcurrentDictionary<string, bool> insideCache;
+
         public static void FlushDnsCaches () {
             dnsCaches = new ConcurrentDictionary<string, DnsCache> ();
         }
@@ -53,6 +55,10 @@ namespace eagle.tunnel.dotnet.core {
                     case EagleTunnelHandler.EagleTunnelRequestType.TCP:
                         SendTCPReq (out result, e);
                         break;
+                    case EagleTunnelHandler.EagleTunnelRequestType.LOCATION:
+                        SendLOCATIONReq (e);
+                        break;
+                    case EagleTunnelHandler.EagleTunnelRequestType.Unknown:
                     default:
                         break;
                 }
@@ -60,10 +66,53 @@ namespace eagle.tunnel.dotnet.core {
             return result;
         }
 
+        private static void SendLOCATIONReq (EagleTunnelArgs e) {
+            string ip2Resolv = e.IP.ToString ();
+            // local cache resolv firstly
+            if (EagleTunnelHandler.insideCache.ContainsKey (ip2Resolv)) {
+                e.EnableProxy = !EagleTunnelHandler.insideCache[e.IP.ToString ()];
+                e.Success = true;
+            } else {
+                // req remote 
+                int times = 3;
+                while (times > 0) {
+                    if (CheckIfInsideByRemote (ip2Resolv, out bool inside)) {
+                        times = 0;
+                        e.EnableProxy = !inside;
+                        e.Success = true;
+                    } else {
+                        times -= 1;
+                        System.Threading.Thread.Sleep(5000);
+                    }
+                }
+                if(!e.Success){
+                    EagleTunnelHandler.ips2Resolv.Enqueue(ip2Resolv);
+                }
+            }
+        }
+
+        private static bool CheckIfInsideByRemote (string ip2Resolv, out bool inside) {
+            bool result = false;
+            inside = false;
+            Tunnel tunnel2Remote = CreateTunnel ();
+            if (tunnel2Remote != null) {
+                if (tunnel2Remote.WriteR ("LOCATION " + ip2Resolv)) {
+                    string reply = tunnel2Remote.ReadStringR ();
+                    if (reply != null) {
+                        if (bool.TryParse (reply, out inside)) {
+                            result = true;
+                        }
+                    }
+                }
+                tunnel2Remote.Close ();
+            }
+            return result;
+        }
+
         private static Tunnel CheckVersion (Socket socket2Server) {
             Tunnel result = null;
             if (socket2Server != null) {
-                string req = "eagle_tunnel 1.0 simple";
+                string req = "eagle_tunnel " + Server.ProtocolVersion + " simple";
                 byte[] buffer = Encoding.ASCII.GetBytes (req);
                 int written;
                 try {

@@ -7,8 +7,8 @@ using System.Threading;
 
 namespace eagle.tunnel.dotnet.core {
     public class Server {
-        public static string Version { get; } = "1.10.0";
-        public static string ProtocolVersion { get; } = "1.0";
+        public static string Version { get; } = "1.11.0";
+        public static string ProtocolVersion { get; } = "1.1";
         private static ConcurrentQueue<Tunnel> clients;
         private static Socket[] servers;
         private static IPEndPoint[] localAddresses;
@@ -45,7 +45,16 @@ namespace eagle.tunnel.dotnet.core {
         public static void Start (IPEndPoint[] localAddresses) {
             if (!IsRunning) {
                 if (localAddresses != null) {
-                    EagleTunnelArgs.StartResolvInside ();
+                    if (Conf.allConf.ContainsKey ("proxy-status")) {
+                        if (Conf.allConf["proxy-status"][0] == "smart") {
+                            EagleTunnelHandler.StartResolvInside ();
+                        }
+                    }
+                    if (Conf.allConf.ContainsKey ("et")) {
+                        if (Conf.allConf["et"][0] == "on") {
+                            EagleTunnelHandler.StartResolvInside ();
+                        }
+                    }
 
                     clients = new ConcurrentQueue<Tunnel> ();
                     servers = new Socket[localAddresses.Length];
@@ -232,7 +241,7 @@ namespace eagle.tunnel.dotnet.core {
                         tunnel2Close.Close ();
                     }
                 }
-                EagleTunnelArgs.DisposeAll ();
+                EagleTunnelHandler.StopResolvInside ();
             }
         }
 

@@ -15,52 +15,6 @@ namespace eagle.tunnel.dotnet.core {
         public static ArrayList whitelist_domain;
         private static ArrayList whitelist_ip;
         private static ArrayList blacklist_ip;
-        public static bool ContainsWhiteIP (string ip) {
-            lock (whitelist_ip) {
-                return whitelist_ip.Contains (ip);
-            }
-        }
-        public static string NewWhitelistIP {
-            set {
-                lock (whitelist_ip) {
-                    if (!whitelist_ip.Contains (value)) {
-                        whitelist_ip.Add (value);
-                        string path = allConf["config-dir"][0] +
-                            Path.DirectorySeparatorChar + "whitelist_ip.txt";
-                        try {
-                            if (File.Exists (path)) {
-                                File.AppendAllText (path, value + Environment.NewLine);
-                            } else {
-                                File.WriteAllText (path, value + Environment.NewLine);
-                            }
-                        } catch (UnauthorizedAccessException) {; }
-                    }
-                }
-            }
-        }
-        public static bool ContainsBlackIP (string ip) {
-            lock (blacklist_ip) {
-                return blacklist_ip.Contains (ip);
-            }
-        }
-        public static string NewBlackIP {
-            set {
-                lock (blacklist_ip) {
-                    if (!blacklist_ip.Contains (value)) {
-                        blacklist_ip.Add (value);
-                        string path = allConf["config-dir"][0] +
-                            Path.DirectorySeparatorChar + "blacklist_ip.txt";
-                        try {
-                            if (File.Exists (path)) {
-                                File.AppendAllText (path, value + Environment.NewLine);
-                            } else {
-                                File.WriteAllText (path, value + Environment.NewLine);
-                            }
-                        } catch (UnauthorizedAccessException) {; }
-                    }
-                }
-            }
-        }
         private static string confFilePath;
         private static EagleTunnelUser localUser;
         public static EagleTunnelUser LocalUser {

@@ -1,6 +1,8 @@
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
+using System.Threading;
 
 namespace eagle.tunnel.dotnet.core {
     public class EagleTunnelHandler {
@@ -8,11 +10,20 @@ namespace eagle.tunnel.dotnet.core {
             TCP,
             UDP,
             DNS,
+            LOCATION,
             Unknown
         }
 
         private static ConcurrentDictionary<string, DnsCache> dnsCaches =
             new ConcurrentDictionary<string, DnsCache> ();
+
+        private static bool LOCATIONHandlerIsRunning;
+        private static Thread threadHandleLOCATION;
+        public static ConcurrentDictionary<string, bool> insideCache =
+            new ConcurrentDictionary<string, bool> ();
+
+        public static ConcurrentQueue<string> ips2Resolv =
+            new ConcurrentQueue<string> ();
 
         public static bool Handle (string firstMsg, Tunnel tunnel) {
             bool result;
@@ -36,12 +47,114 @@ namespace eagle.tunnel.dotnet.core {
                                         user.AddTunnel (tunnel);
                                     }
                                     break;
+                                case EagleTunnelRequestType.LOCATION:
+                                    HandleLOCATIONReq (req, tunnel);
+                                    break;
+                                case EagleTunnelRequestType.Unknown:
+                                default:
+                                    break;
                             }
                         }
                     }
                 }
             } else {
                 result = false;
+            }
+            return result;
+        }
+
+        private static void HandleLOCATIONReq (string req, Tunnel tunnel) {
+            string[] reqs = req.Split (' ');
+            if (reqs.Length >= 2) {
+                string ip2Resolv = reqs[1];
+                string result;
+                if (insideCache.ContainsKey (ip2Resolv)) {
+                    result = insideCache[ip2Resolv].ToString ();
+                } else {
+                    ips2Resolv.Enqueue (ip2Resolv);
+                    result = "not found";
+                }
+                tunnel.WriteL (result);
+            } else {
+                tunnel.Close ();
+            }
+        }
+
+        public static void StartResolvInside () {
+            if (!LOCATIONHandlerIsRunning) {
+                LOCATIONHandlerIsRunning = true;
+                threadHandleLOCATION = new Thread (threadHandleLOCATION_Handler);
+                threadHandleLOCATION.IsBackground = true;
+                threadHandleLOCATION.Start ();
+            }
+        }
+
+        public static void StopResolvInside () {
+            LOCATIONHandlerIsRunning = false;
+        }
+
+        private static void threadHandleLOCATION_Handler () {
+            insideCache = new ConcurrentDictionary<string, bool> ();
+            while (LOCATIONHandlerIsRunning) {
+                if (ips2Resolv.IsEmpty) {
+                    Thread.Sleep (5000);
+                } else {
+                    if (ips2Resolv.TryDequeue (out string ip)) {
+                        if (CheckIfInsideByLocal_Bool (ip, out bool result)) {
+                            if (!insideCache.TryAdd (ip, result)) {
+                                insideCache[ip] = result;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private static bool CheckIfInsideByLocal_Bool (string ip, out bool result_Bool) {
+            string result = CheckIfInsideByLocal (ip);
+            bool succeed;
+            switch (result) {
+                case "in":
+                    succeed = true;
+                    result_Bool = true;
+                    break;
+                case "out":
+                    succeed = true;
+                    result_Bool = false;
+                    break;
+                case "failed":
+                default:
+                    succeed = false;
+                    result_Bool = false;
+                    break;
+            }
+            return succeed;
+        }
+
+        public static string CheckIfInsideByLocal (string ip) {
+            string result = "failed";
+            string req = @"https://ip2c.org/" + ip;
+            string reply = "";
+            HttpWebRequest httpReq = HttpWebRequest.CreateHttp (req);
+            try {
+                using (HttpWebResponse httpRes = httpReq.GetResponse () as HttpWebResponse) {
+                    using (System.IO.Stream stream = httpRes.GetResponseStream ()) {
+                        byte[] buffer = new byte[1024];
+                        int bytes = stream.Read (buffer, 0, buffer.Length);
+                        reply = Encoding.UTF8.GetString (buffer, 0, bytes);
+                    }
+                }
+            } catch {; }
+            if (!string.IsNullOrEmpty (reply)) {
+                if (reply == @"0;;;WRONG INPUT") {
+                    result = "failed";
+                } else if (reply == @"1;CN;CHN;China") {
+                    result = "in";
+                } else if (reply == @"1;ZZ;ZZZ;Reserved") {
+                    result = "in";
+                } else {
+                    result = "out";
+                }
             }
             return result;
         }
@@ -53,7 +166,7 @@ namespace eagle.tunnel.dotnet.core {
                 string reply = "";
                 result = args[0] == "eagle_tunnel";
                 reply = result ? "valid" : "invalid";
-                bool valid1 = args[1] == "1.0";
+                bool valid1 = args[1] == Server.ProtocolVersion;
                 result &= valid1;
                 reply += valid1 ? " valid" : " invalid";
                 valid1 = args[2] == "simple";
