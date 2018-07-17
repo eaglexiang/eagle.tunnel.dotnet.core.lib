@@ -73,20 +73,12 @@ namespace eagle.tunnel.dotnet.core {
                 e.EnableProxy = !EagleTunnelHandler.insideCache[e.IP.ToString ()];
                 e.Success = true;
             } else {
-                // req remote 
-                int times = 3;
-                while (times > 0) {
-                    if (CheckIfInsideByRemote (ip2Resolv, out bool inside)) {
-                        times = 0;
-                        e.EnableProxy = !inside;
-                        e.Success = true;
-                    } else {
-                        times -= 1;
-                        System.Threading.Thread.Sleep(5000);
-                    }
-                }
-                if(!e.Success){
-                    EagleTunnelHandler.ips2Resolv.Enqueue(ip2Resolv);
+                // req remote
+                if (CheckIfInsideByRemote (ip2Resolv, out bool inside)) {
+                    e.EnableProxy = !inside;
+                    e.Success = true;
+                } else {
+                    EagleTunnelHandler.ips2Resolv.Enqueue (ip2Resolv);
                 }
             }
         }
