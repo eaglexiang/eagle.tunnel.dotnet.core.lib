@@ -1,10 +1,11 @@
 co.jp
-google.com
 facebook.com
 facebook.net
 fbcdn.net
 fbsbx.com
 gstatic.com
+google.com
+googleapis.cn
 googlevideo.com
 instagram.com
 nytimes.com
