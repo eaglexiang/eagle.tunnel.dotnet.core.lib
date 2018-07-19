@@ -270,8 +270,12 @@ namespace eagle.tunnel.dotnet.core {
             if (path == "") {
                 if (allConf.ContainsKey ("config-dir")) {
                     path = allConf["config-dir"][0] + Path.DirectorySeparatorChar;
-                    path += filename;
+
+                } else {
+                    string dir = Path.GetDirectoryName(confFilePath);
+                    path = dir + Path.DirectorySeparatorChar;
                 }
+                path += filename;
             }
 
             string[] lines;
