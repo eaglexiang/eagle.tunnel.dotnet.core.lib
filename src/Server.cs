@@ -124,8 +124,8 @@ namespace eagle.tunnel.dotnet.core {
                         try {
                             Socket client = server.Accept ();
                             // set timeout to avoid ddos
-                            client.SendTimeout = 5000;
-                            client.ReceiveTimeout = 5000;
+                            client.SendTimeout = Conf.PipeTimeOut;
+                            client.ReceiveTimeout = Conf.PipeTimeOut;
                             lock (locksOfReqGotNumbers[ipepIndex]) {
                                 reqGotNumbers[ipepIndex] += 1;
                             }

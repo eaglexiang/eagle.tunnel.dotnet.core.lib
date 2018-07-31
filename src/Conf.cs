@@ -16,6 +16,7 @@ namespace eagle.tunnel.dotnet.core {
         private static ArrayList whitelist_ip;
         private static ArrayList blacklist_ip;
         private static string confFilePath;
+        public static int PipeTimeOut;
         private static EagleTunnelUser localUser;
         public static EagleTunnelUser LocalUser {
             get {
@@ -206,6 +207,14 @@ namespace eagle.tunnel.dotnet.core {
                 Console.WriteLine ("User: {0}", LocalUser.ID);
             }
 
+            PipeTimeOut = 0;
+            if (Conf.allConf.ContainsKey ("timeout")) {
+                if (int.TryParse (Conf.allConf["timeout"][0], out int timeout)) {
+                    PipeTimeOut = timeout;
+                }
+            }
+            Console.WriteLine("TimeOut(ms): {0} (0 means infinite timeout period.)", PipeTimeOut);
+
             maxClientsCount = 500;
             if (allConf.ContainsKey ("worker")) {
                 if (int.TryParse (allConf["worker"][0], out int workerCount)) {
@@ -272,7 +281,7 @@ namespace eagle.tunnel.dotnet.core {
                     path = allConf["config-dir"][0] + Path.DirectorySeparatorChar;
 
                 } else {
-                    string dir = Path.GetDirectoryName(confFilePath);
+                    string dir = Path.GetDirectoryName (confFilePath);
                     path = dir + Path.DirectorySeparatorChar;
                 }
                 path += filename;
