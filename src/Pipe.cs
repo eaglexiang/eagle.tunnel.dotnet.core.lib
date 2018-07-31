@@ -9,8 +9,30 @@ namespace eagle.tunnel.dotnet.core {
     public class Pipe {
         public string UserFrom { get; set; }
         public int BytesTransferred { get; private set; }
-        public Socket SocketFrom { get; set; }
-        public Socket SocketTo { get; set; }
+        private Socket socketfrom;
+        public Socket SocketFrom {
+            get {
+                return socketfrom;
+            }
+            set {
+                socketfrom = value;
+                if (socketfrom != null) {
+                    socketfrom.NoDelay = true;
+                }
+            }
+        }
+        private Socket socketto;
+        public Socket SocketTo {
+            get {
+                return socketto;
+            }
+            set {
+                socketto = value;
+                if (socketto != null) {
+                    socketto.NoDelay = true;
+                }
+            }
+        }
         public bool EncryptFrom { get; set; }
         public bool EncryptTo { get; set; }
         private static byte EncryptionKey = 0x22;

@@ -15,8 +15,8 @@ namespace eagle.tunnel.dotnet.core {
                     if (tmpTunnel != null) {
                         tunnel.SocketR = tmpTunnel.SocketR;
                         tunnel.EncryptR = tmpTunnel.EncryptR;
-                        if(Conf.LocalUser!=null){
-                            Conf.LocalUser.AddTunnel(tunnel);
+                        if (Conf.LocalUser != null) {
+                            Conf.LocalUser.AddTunnel (tunnel);
                         }
                         if (e0.HTTP_Request_Type == HTTPRequestType.CONNECT) {
                             // HTTPS: reply web client;
@@ -24,7 +24,7 @@ namespace eagle.tunnel.dotnet.core {
                             result = tunnel.WriteL (re443);
                         } else {
                             // HTTP: relay new request to web server
-                            string newReq = HTTPReqArgs.CreateNewRequest (firstMsg);
+                            string newReq = HTTPReqArgs.CreateNewRequest(firstMsg);
                             result = tunnel.WriteR (newReq);
                         }
                     }
