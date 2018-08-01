@@ -15,6 +15,7 @@ namespace eagle.tunnel.dotnet.core {
         public static ArrayList whitelist_domain;
         private static ArrayList whitelist_ip;
         private static ArrayList blacklist_ip;
+        public static ConcurrentDictionary<string, IPAddress> hosts;
         private static string confFilePath;
         public static int PipeTimeOut;
         private static EagleTunnelUser localUser;
@@ -213,7 +214,7 @@ namespace eagle.tunnel.dotnet.core {
                     PipeTimeOut = timeout;
                 }
             }
-            Console.WriteLine("TimeOut(ms): {0} (0 means infinite timeout period.)", PipeTimeOut);
+            Console.WriteLine ("TimeOut(ms): {0} (0 means infinite timeout period.)", PipeTimeOut);
 
             maxClientsCount = 500;
             if (allConf.ContainsKey ("worker")) {
@@ -273,9 +274,11 @@ namespace eagle.tunnel.dotnet.core {
             ImportList ("whitelist_domain.txt", out whitelist_domain);
             ImportList ("whitelist_ip.txt", out whitelist_ip);
             ImportList ("blacklist_ip.txt", out blacklist_ip);
+            ImportHosts ("hosts", out hosts);
         }
 
-        private static void ImportList (string filename, out ArrayList list, string path = "") {
+        private static bool ImportList (string filename, out ArrayList list, string path = "") {
+            bool result = false;
             if (path == "") {
                 if (allConf.ContainsKey ("config-dir")) {
                     path = allConf["config-dir"][0] + Path.DirectorySeparatorChar;
@@ -303,7 +306,9 @@ namespace eagle.tunnel.dotnet.core {
             list = new ArrayList ();
             if (lines != null) {
                 list.AddRange (lines);
+                result = true;
             }
+            return result;
         }
 
         private static IPEndPoint[] CreateEndPoints (List<string> addresses) {
@@ -354,6 +359,29 @@ namespace eagle.tunnel.dotnet.core {
                     allConf[key].Add (value);
                 }
             }
+        }
+
+        private static bool ImportHosts (string filename,
+            out ConcurrentDictionary<string, IPAddress> hosts) {
+            bool result = false;
+            hosts = new ConcurrentDictionary<string, IPAddress> ();
+            if (ImportList (filename, out ArrayList list)) {
+                for (int i = 0; i < list.Count; ++i) {
+                    string line = list[i] as string;
+                    string[] arr = line.Trim ().Split (new char[] { ' ' },
+                        StringSplitOptions.RemoveEmptyEntries);
+                    line = string.Join ("\t", arr);
+                    arr = line.Trim ().Split (new char[] { '\t' },
+                        StringSplitOptions.RemoveEmptyEntries);
+                    if (arr.Length == 2) {
+                        if (IPAddress.TryParse (arr[0], out IPAddress ip)) {
+                            hosts.TryAdd (arr[1], ip);
+                        }
+                    }
+                }
+                result = true;
+            }
+            return result;
         }
 
         public static void Save () {

@@ -148,30 +148,29 @@ namespace eagle.tunnel.dotnet.core {
 
         private static void SendDNSReq (EagleTunnelArgs e) {
             if (e != null) {
-                e.IP = null;
                 if (e.Domain != null) {
-                    if (dnsCaches.ContainsKey (e.Domain)) {
-                        try {
+                    if (Conf.hosts.ContainsKey (e.Domain)) {
+                        e.IP = Conf.hosts[e.Domain];
+                        e.Success = true;
+                    } else {
+                        if (dnsCaches.ContainsKey (e.Domain)) {
                             if (!dnsCaches[e.Domain].IsDead) {
                                 e.IP = dnsCaches[e.Domain].IP;
+                                e.Success = true;
                             } else {
                                 e.IP = ResolvDomain (e);
                                 if (e.IP != null) {
                                     dnsCaches[e.Domain].IP = e.IP;
+                                    e.Success = true;
                                 }
                             }
-                        } catch (System.Collections.Generic.KeyNotFoundException) {
+                        } else {
                             e.IP = ResolvDomain (e);
                             if (e.IP != null) {
                                 DnsCache cache = new DnsCache (e.Domain, e.IP, Conf.DnsCacheTti);
                                 dnsCaches.TryAdd (e.Domain, cache);
+                                e.Success = true;
                             }
-                        }
-                    } else {
-                        e.IP = ResolvDomain (e);
-                        if (e.IP != null) {
-                            DnsCache cache = new DnsCache (e.Domain, e.IP, Conf.DnsCacheTti);
-                            dnsCaches.TryAdd (e.Domain, cache);
                         }
                     }
                 }
