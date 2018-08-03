@@ -12,6 +12,19 @@ namespace eagle.tunnel.dotnet.core {
             ENABLE,
             SMART
         }
+        private static string ConfDirPath {
+            get {
+                string path;
+                if (allConf.ContainsKey ("config-dir")) {
+                    path = allConf["config-dir"][0] + Path.DirectorySeparatorChar;
+
+                } else {
+                    string dir = Path.GetDirectoryName (confFilePath);
+                    path = dir + Path.DirectorySeparatorChar;
+                }
+                return path;
+            }
+        }
         public static ArrayList whitelist_domain;
         private static ArrayList whitelist_ip;
         private static ArrayList blacklist_ip;
@@ -274,19 +287,13 @@ namespace eagle.tunnel.dotnet.core {
             ImportList ("whitelist_domain.txt", out whitelist_domain);
             ImportList ("whitelist_ip.txt", out whitelist_ip);
             ImportList ("blacklist_ip.txt", out blacklist_ip);
-            ImportHosts ("hosts", out hosts);
+            ImportHosts (out hosts);
         }
 
         private static bool ImportList (string filename, out ArrayList list, string path = "") {
             bool result = false;
             if (path == "") {
-                if (allConf.ContainsKey ("config-dir")) {
-                    path = allConf["config-dir"][0] + Path.DirectorySeparatorChar;
-
-                } else {
-                    string dir = Path.GetDirectoryName (confFilePath);
-                    path = dir + Path.DirectorySeparatorChar;
-                }
+                path = ConfDirPath;
                 path += filename;
             }
 
@@ -361,13 +368,24 @@ namespace eagle.tunnel.dotnet.core {
             }
         }
 
-        private static bool ImportHosts (string filename,
-            out ConcurrentDictionary<string, IPAddress> hosts) {
+        private static bool ImportHosts (out ConcurrentDictionary<string, IPAddress> hosts) {
             bool result = false;
             hosts = new ConcurrentDictionary<string, IPAddress> ();
-            if (ImportList (filename, out ArrayList list)) {
-                for (int i = 0; i < list.Count; ++i) {
-                    string line = list[i] as string;
+            ArrayList lists = new ArrayList ();
+            DirectoryInfo di = new DirectoryInfo (ConfDirPath + "//hosts");
+            foreach (FileInfo i in di.GetFiles ()) {
+                int indOfDot = i.Name.LastIndexOf ('.');
+                if (indOfDot > 0) {
+                    if (i.Name.Substring (indOfDot + 1) == "hosts") {
+                        if (ImportList ("hosts/" + i.Name, out ArrayList list)) {
+                            lists.AddRange (list);
+                        }
+                    }
+                }
+            }
+            if (lists.Count > 0) {
+                for (int i = 0; i < lists.Count; ++i) {
+                    string line = lists[i] as string;
                     string[] arr = line.Trim ().Split (new char[] { ' ' },
                         StringSplitOptions.RemoveEmptyEntries);
                     line = string.Join ("\t", arr);

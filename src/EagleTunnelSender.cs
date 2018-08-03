@@ -179,20 +179,12 @@ namespace eagle.tunnel.dotnet.core {
 
         private static IPAddress ResolvDomain (EagleTunnelArgs e) {
             IPAddress result = null;
-            int times = 3;
             if (e.EnableProxy) {
-                while (result == null && times-- > 0) {
-                    result = ResolvByProxy (e.Domain);
-                }
+                result = ResolvByProxy (e.Domain);
             } else {
-                while (result == null && times-- > 0) {
-                    result = ResolvByLocal (e.Domain);
-                }
+                result = ResolvByLocal (e.Domain);
                 if (result == null) {
-                    times = 3;
-                    while (result == null && times-- > 0) {
-                        result = ResolvByProxy (e.Domain);
-                    }
+                    result = ResolvByProxy (e.Domain);
                 }
             }
             return result;

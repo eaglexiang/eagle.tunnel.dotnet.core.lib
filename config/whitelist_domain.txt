@@ -6,6 +6,7 @@ fbsbx.com
 gstatic.com
 google.com
 googleapis.cn
+googleapis.com
 googlevideo.com
 instagram.com
 nytimes.com
