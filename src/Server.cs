@@ -7,15 +7,14 @@ using System.Threading;
 
 namespace eagle.tunnel.dotnet.core {
     public class Server {
-        public static string Version { get; } = "1.12.1";
+        public static string Version { get; } = "1.13.0";
         public static string ProtocolVersion { get; } = "1.1";
         private static ConcurrentQueue<Tunnel> clients;
         private static Socket[] servers;
         private static IPEndPoint[] localAddresses;
         private static Thread threadLimitCheck;
         private const int maxReqGotNumber = 100;
-        private static int[] reqGotNumbers;
-        private static object[] locksOfReqGotNumbers;
+        private static ConCurrentCounter reqGotNumbers;
         private static bool IsRunning { get; set; } // Server will keep running.
         // Server has started working.
         public static bool IsWorking {
@@ -58,8 +57,7 @@ namespace eagle.tunnel.dotnet.core {
 
                     clients = new ConcurrentQueue<Tunnel> ();
                     servers = new Socket[localAddresses.Length];
-                    reqGotNumbers = new int[localAddresses.Length];
-                    locksOfReqGotNumbers = new object[localAddresses.Length];
+                    reqGotNumbers = new ConCurrentCounter ();
                     Server.localAddresses = localAddresses;
                     IsRunning = true;
 
@@ -110,15 +108,13 @@ namespace eagle.tunnel.dotnet.core {
             if (server != null) {
                 // init lists
                 servers[ipepIndex] = server;
-                locksOfReqGotNumbers[ipepIndex] = new object ();
-                reqGotNumbers[ipepIndex] = 0;
                 // listen
                 server.Listen (100);
                 Console.WriteLine ("start to Listen: {0}",
                     server.LocalEndPoint.ToString ());
                 // socket connections handle
                 while (IsRunning) {
-                    if (reqGotNumbers[ipepIndex] > maxReqGotNumber) {
+                    if (reqGotNumbers.Value >= maxReqGotNumber) {
                         Thread.Sleep (100); // wait until reqGotNumber <= maxReqGotNumber
                     } else {
                         try {
@@ -126,9 +122,7 @@ namespace eagle.tunnel.dotnet.core {
                             // set timeout to avoid ddos
                             client.SendTimeout = Conf.PipeTimeOut;
                             client.ReceiveTimeout = Conf.PipeTimeOut;
-                            lock (locksOfReqGotNumbers[ipepIndex]) {
-                                reqGotNumbers[ipepIndex] += 1;
-                            }
+                            reqGotNumbers += 1;
                             HandleClientAsync (client, ipepIndex);
                         } catch (SocketException se) {
                             Console.WriteLine ("{0}",
@@ -189,9 +183,7 @@ namespace eagle.tunnel.dotnet.core {
                     }
                 }
             }
-            lock (locksOfReqGotNumbers[ipepIndex]) {
-                reqGotNumbers[ipepIndex] -= 1;
-            }
+            reqGotNumbers -= 1;
         }
 
         public static double Speed () {
