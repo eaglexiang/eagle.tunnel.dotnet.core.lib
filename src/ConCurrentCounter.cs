@@ -4,14 +4,12 @@ namespace eagle.tunnel.dotnet.core {
             int[] data;
             object[] locks;
             int index;
-            object lockOfIndex;
 
             public ConCurrentCounterData (int sizeOfLocks) {
                 if (sizeOfLocks <= 0) {
                     throw new System.ArgumentOutOfRangeException ();
                 }
                 index = 0;
-                lockOfIndex = new object ();
                 data = new int[sizeOfLocks];
                 locks = new object[sizeOfLocks];
                 for (int i = 0; i < sizeOfLocks; ++i) {
@@ -34,21 +32,14 @@ namespace eagle.tunnel.dotnet.core {
                         locks[i] = new object ();
                         data[i] = 0;
                     }
-                    lock (lockOfIndex) {
-                        index = 0;
-                    }
+                    index = 0;
                     data[0] = value;
                 }
             }
 
             public int GetIndex () {
-                int result;
-                lock (lockOfIndex) {
-                    result = index++;
-                    if(index == 10){
-                        index = 0;
-                    }
-                }
+                int result = index++;
+                result %= data.Length;
                 return result;
             }
 
