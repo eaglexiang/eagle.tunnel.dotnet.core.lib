@@ -393,7 +393,9 @@ namespace eagle.tunnel.dotnet.core {
                         StringSplitOptions.RemoveEmptyEntries);
                     if (arr.Length == 2) {
                         if (IPAddress.TryParse (arr[0], out IPAddress ip)) {
-                            hosts.TryAdd (arr[1], ip);
+                            if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) {
+                                hosts.TryAdd (arr[1], ip);
+                            }
                         }
                     }
                 }
