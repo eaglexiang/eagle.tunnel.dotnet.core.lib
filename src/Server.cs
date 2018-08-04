@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace eagle.tunnel.dotnet.core {
     public class Server {
-        public static string Version { get; } = "1.13.1";
+        public static string Version { get; } = "1.13.2";
         public static string ProtocolVersion { get; } = "1.1";
         private static ConcurrentQueue<Tunnel> clients;
         private static Socket[] servers;
@@ -122,7 +122,7 @@ namespace eagle.tunnel.dotnet.core {
                             // set timeout to avoid ddos
                             client.SendTimeout = Conf.PipeTimeOut;
                             client.ReceiveTimeout = Conf.PipeTimeOut;
-                            reqGotNumbers += 1;
+                            reqGotNumbers.Up();
                             HandleClientAsync (client, ipepIndex);
                         } catch (SocketException se) {
                             Console.WriteLine ("{0}",
@@ -183,7 +183,7 @@ namespace eagle.tunnel.dotnet.core {
                     }
                 }
             }
-            reqGotNumbers -= 1;
+            reqGotNumbers.Down();
         }
 
         public static double Speed () {
