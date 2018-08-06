@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 
 namespace eagle.tunnel.dotnet.core {
     public class EagleTunnelSender {
@@ -12,6 +13,49 @@ namespace eagle.tunnel.dotnet.core {
 
         public static void FlushDnsCaches () {
             dnsCaches = new ConcurrentDictionary<string, DnsCache> ();
+        }
+
+        private static bool IsRunning { get; set; } = false;
+        private static ConcurrentQueue<Tunnel> tunnels2Allot =
+            new ConcurrentQueue<Tunnel> ();
+        private const int maxCountOfTunnels2Allot = 20;
+
+        private static Tunnel NewTunnel2Remote () {
+            Tunnel result;
+            if (tunnels2Allot.TryDequeue (out Tunnel tunnel)) {
+                result = tunnel;
+
+            } else {
+                result = CreateTunnel ();
+            }
+            return result;
+        }
+        
+        private static void KeepTunnelPool () {
+            while (IsRunning) {
+                if (tunnels2Allot.Count > maxCountOfTunnels2Allot) {
+                    System.Threading.Thread.Sleep (100);
+                } else {
+                    Tunnel tunnel = CreateTunnel ();
+                    if (tunnel != null) {
+                        tunnels2Allot.Enqueue (tunnel);
+                    }
+                }
+            }
+        }
+
+        public static void OpenTunnelPool () {
+            if (IsRunning == false) {
+                Thread thread2KeepTunnelPool = new Thread (KeepTunnelPool) {
+                IsBackground = true
+                };
+                IsRunning = true;
+                thread2KeepTunnelPool.Start ();
+            }
+        }
+
+        public static void CloseTunnelPool () {
+            IsRunning = false;
         }
 
         private static Tunnel CreateTunnel () {
@@ -86,7 +130,7 @@ namespace eagle.tunnel.dotnet.core {
         private static bool CheckIfInsideByRemote (string ip2Resolv, out bool inside) {
             bool result = false;
             inside = false;
-            Tunnel tunnel2Remote = CreateTunnel ();
+            Tunnel tunnel2Remote = NewTunnel2Remote ();
             if (tunnel2Remote != null) {
                 if (tunnel2Remote.WriteR ("LOCATION " + ip2Resolv)) {
                     string reply = tunnel2Remote.ReadStringR ();
@@ -192,7 +236,7 @@ namespace eagle.tunnel.dotnet.core {
 
         private static IPAddress ResolvByProxy (string domain) {
             IPAddress result = null;
-            Tunnel tunnel = CreateTunnel ();
+            Tunnel tunnel = NewTunnel2Remote ();
             if (tunnel != null) {
                 string req = EagleTunnelHandler.EagleTunnelRequestType.DNS.ToString ();
                 req += " " + domain;
@@ -239,7 +283,7 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         private static void ConnectByProxy (out Tunnel tunnel, EagleTunnelArgs e) {
-            tunnel = CreateTunnel ();
+            tunnel = NewTunnel2Remote ();
             if (tunnel != null) {
                 string req = EagleTunnelHandler.EagleTunnelRequestType.TCP.ToString ();
                 req += ' ' + e.EndPoint.Address.ToString ();

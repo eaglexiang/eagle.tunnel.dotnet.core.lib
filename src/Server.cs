@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace eagle.tunnel.dotnet.core {
     public class Server {
-        public static string Version { get; } = "1.13.2";
+        public static string Version { get; } = "1.13.3";
         public static string ProtocolVersion { get; } = "1.1";
         private static ConcurrentQueue<Tunnel> clients;
         private static Socket[] servers;
@@ -52,6 +52,16 @@ namespace eagle.tunnel.dotnet.core {
                     if (Conf.allConf.ContainsKey ("et")) {
                         if (Conf.allConf["et"][0] == "on") {
                             EagleTunnelHandler.StartResolvInside ();
+                        }
+                    }
+                    if (Conf.allConf.ContainsKey ("http")) {
+                        if (Conf.allConf["http"][0] == "on") {
+                            EagleTunnelSender.OpenTunnelPool ();
+                        }
+                    }
+                    if (Conf.allConf.ContainsKey ("socks")) {
+                        if (Conf.allConf["socks"][0] == "on") {
+                            EagleTunnelSender.OpenTunnelPool ();
                         }
                     }
 
@@ -122,7 +132,7 @@ namespace eagle.tunnel.dotnet.core {
                             // set timeout to avoid ddos
                             client.SendTimeout = Conf.PipeTimeOut;
                             client.ReceiveTimeout = Conf.PipeTimeOut;
-                            reqGotNumbers.Up();
+                            reqGotNumbers.Up ();
                             HandleClientAsync (client, ipepIndex);
                         } catch (SocketException se) {
                             Console.WriteLine ("{0}",
@@ -183,7 +193,7 @@ namespace eagle.tunnel.dotnet.core {
                     }
                 }
             }
-            reqGotNumbers.Down();
+            reqGotNumbers.Down ();
         }
 
         public static double Speed () {
@@ -235,6 +245,7 @@ namespace eagle.tunnel.dotnet.core {
                     }
                 }
                 EagleTunnelHandler.StopResolvInside ();
+                EagleTunnelSender.CloseTunnelPool ();
             }
         }
 
