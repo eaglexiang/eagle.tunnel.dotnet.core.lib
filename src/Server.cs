@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace eagle.tunnel.dotnet.core {
     public class Server {
-        public static string Version { get; } = "1.13.4";
+        public static string Version { get; } = "1.13.3";
         public static string ProtocolVersion { get; } = "1.1";
         private static ConcurrentQueue<Tunnel> clients;
         private static Socket[] servers;
@@ -125,10 +125,6 @@ namespace eagle.tunnel.dotnet.core {
                 // socket connections handle
                 while (IsRunning) {
                     if (reqGotNumbers.Value >= maxReqGotNumber) {
-                        if(clients.TryDequeue(out Tunnel tunnel2Close)){
-                            tunnel2Close.Close();
-                            reqGotNumbers.Down();
-                        }
                         Thread.Sleep (100); // wait until reqGotNumber < maxReqGotNumber
                     } else {
                         try {
