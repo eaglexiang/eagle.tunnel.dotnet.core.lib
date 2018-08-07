@@ -7,13 +7,13 @@ using System.Threading;
 
 namespace eagle.tunnel.dotnet.core {
     public class Server {
-        public static string Version { get; } = "1.13.3";
+        public static string Version { get; } = "1.13.4";
         public static string ProtocolVersion { get; } = "1.1";
         private static ConcurrentQueue<Tunnel> clients;
         private static Socket[] servers;
         private static IPEndPoint[] localAddresses;
         private static Thread threadLimitCheck;
-        private const int maxReqGotNumber = 100;
+        private static int maxReqGotNumber = 100;
         private static ConCurrentCounter reqGotNumbers;
         private static bool IsRunning { get; set; } // Server will keep running.
         // Server has started working.
@@ -113,6 +113,11 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         private static void Listen (int ipepIndex) {
+            if (Conf.allConf.ContainsKey ("listen-max")) {
+                if (int.TryParse (Conf.allConf["listen-max"][0], out int arg)) {
+                    maxReqGotNumber = arg;
+                }
+            }
             IPEndPoint ipep = localAddresses[ipepIndex];
             Socket server = CreateServer (ipep);
             if (server != null) {
