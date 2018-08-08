@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace eagle.tunnel.dotnet.core {
     public class Pipe {
@@ -162,9 +163,11 @@ namespace eagle.tunnel.dotnet.core {
         public void Flow () {
             if (!IsRunning) {
                 IsRunning = true;
-                Thread thread_Flow = new Thread (_Flow);
-                thread_Flow.IsBackground = true;
-                thread_Flow.Start ();
+                // Thread thread_Flow = new Thread (_Flow);
+                // thread_Flow.IsBackground = true;
+                // thread_Flow.Start ();
+                Task taskFlow = new Task(()=>_Flow());
+                taskFlow.Start();
             }
             // if (!IsRunning) {
             //     IsRunning = true;

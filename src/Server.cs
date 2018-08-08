@@ -4,12 +4,13 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace eagle.tunnel.dotnet.core {
     public class Server {
-        public static string Version { get; } = "1.13.4";
+        public static string Version { get; } = "1.14.0";
         public static string ProtocolVersion { get; } = "1.1";
-        private static ConcurrentQueue<Tunnel> clients;
+        private static ConcurrentQueue<Tunnel> clients; // connections from front ends
         private static Socket[] servers;
         private static IPEndPoint[] localAddresses;
         private static Thread threadLimitCheck;
@@ -36,9 +37,8 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         public static void StartAsync (IPEndPoint[] localAddresses) {
-            Thread thread = new Thread (() => Start (localAddresses));
-            thread.IsBackground = true;
-            thread.Start ();
+            Task taskStart = new Task(()=>Start(localAddresses));
+            taskStart.Start();
         }
 
         public static void Start (IPEndPoint[] localAddresses) {
@@ -113,6 +113,7 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         private static void Listen (int ipepIndex) {
+            // import maxReqGotNumber from config file
             if (Conf.allConf.ContainsKey ("listen-max")) {
                 if (int.TryParse (Conf.allConf["listen-max"][0], out int arg)) {
                     maxReqGotNumber = arg;
@@ -152,16 +153,13 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         private static void HandleClientAsync (Socket socket2Client, int ipepIndex) {
-            Thread threadHandleClient = new Thread (_handleClient);
-            threadHandleClient.IsBackground = true;
             object[] args = new object[2] { socket2Client, ipepIndex };
-            threadHandleClient.Start (args);
+            Task taskHandleClient = new Task(()=>_handleClient(socket2Client, ipepIndex),
+                TaskCreationOptions.LongRunning);
+            taskHandleClient.Start();
         }
 
-        private static void _handleClient (object argsObj) {
-            object[] args = argsObj as object[];
-            Socket socket2Client = args[0] as Socket;
-            int ipepIndex = (int) args[1];
+        private static void _handleClient (Socket socket2Client, int ipepIndex) {
             Tunnel tunnel2Add = new Tunnel (socket2Client);
 
             while (clients.Count >= Conf.maxClientsCount) {
@@ -255,9 +253,8 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         public static void CloseAsync () {
-            Thread thread = new Thread (Close);
-            thread.IsBackground = true;
-            thread.Start ();
+            Task taskClose = new Task(()=>Close());
+            taskClose.Start();
         }
     }
 }
