@@ -134,6 +134,7 @@ namespace eagle.tunnel.dotnet.core {
             }
         }
         public static int DnsCacheTti { get; set; } = 60; // default 60s
+        public static byte encryptionKey;
 
         private static object lockOfIndex;
 
@@ -211,6 +212,13 @@ namespace eagle.tunnel.dotnet.core {
 
             ImportUsers ();
             Console.WriteLine ("find user(s): {0}", EagleTunnelUser.users.Count);
+
+            encryptionKey = 0x22;
+            if(allConf.ContainsKey("data-key")){
+                if(byte.TryParse(allConf["data-key"][0], out byte tmpByte)){
+                    encryptionKey = tmpByte;
+                }
+            }
 
             if (allConf.ContainsKey ("user")) {
                 if (EagleTunnelUser.TryParse (allConf["user"][0], out EagleTunnelUser user, true)) {

@@ -36,16 +36,12 @@ namespace eagle.tunnel.dotnet.core {
         }
         public bool EncryptFrom { get; set; }
         public bool EncryptTo { get; set; }
-        private static byte EncryptionKey = 0x22;
+        private static byte EncryptionKey;
         private byte[] bufferRead;
         public bool IsRunning { get; private set; }
         public object IsWaiting { get; set; }
 
-        // private Thread threadRead;
-        // private Thread threadWrite;
-        // private ConcurrentQueue<byte[]> buffers;
-
-        public Pipe (Socket from = null, Socket to = null, string user = null) {
+        public Pipe ( Socket from = null, Socket to = null, string user = null, byte encryptionKey = 0) {
             SocketFrom = from;
             SocketTo = to;
             EncryptFrom = false;
@@ -55,8 +51,7 @@ namespace eagle.tunnel.dotnet.core {
             BytesTransferred = 0;
             bufferRead = new byte[2048];
             IsRunning = false;
-
-            // buffers = new ConcurrentQueue<byte[]> ();
+            EncryptionKey = encryptionKey; 
         }
 
         // private void threadRead_Handler () {
