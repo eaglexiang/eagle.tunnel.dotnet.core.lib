@@ -24,7 +24,6 @@ namespace eagle.tunnel.dotnet.core {
             Tunnel result;
             if (tunnels2Allot.TryDequeue (out Tunnel tunnel)) {
                 result = tunnel;
-
             } else {
                 result = CreateTunnel ();
             }
@@ -58,16 +57,16 @@ namespace eagle.tunnel.dotnet.core {
             IsRunning = false;
         }
 
-        private static Tunnel CreateTunnel () {
-            Tunnel result = null;
-            int times = 3;
-            while (result == null && times-- > 0) {
-                result = _CreateTunnel ();
-            }
-            return result;
-        }
+        // private static Tunnel CreateTunnel () {
+        //     Tunnel result = null;
+        //     int times = 3;
+        //     while (result == null && times-- > 0) {
+        //         result = _CreateTunnel ();
+        //     }
+        //     return result;
+        // }
 
-        private static Tunnel _CreateTunnel () {
+        private static Tunnel CreateTunnel () {
             Tunnel result = null;
             Socket socket2Server = new Socket (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             IPEndPoint ipeOfServer = Conf.GetRemoteIPEndPoint ();
