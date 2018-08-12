@@ -158,12 +158,12 @@ namespace eagle.tunnel.dotnet.core
 
         public bool WriteL(string msg)
         {
-            return pipeR2L.Write(msg);
+            return pipeR2L.Write(msg) >= 0;
         }
 
         public bool WriteR(string msg)
         {
-            return pipeL2R.Write(msg);
+            return pipeL2R.Write(msg) >= 0;
         }
 
         public byte[] ReadL()
