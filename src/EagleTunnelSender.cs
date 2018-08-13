@@ -57,15 +57,6 @@ namespace eagle.tunnel.dotnet.core {
             IsRunning = false;
         }
 
-        // private static Tunnel CreateTunnel () {
-        //     Tunnel result = null;
-        //     int times = 3;
-        //     while (result == null && times-- > 0) {
-        //         result = _CreateTunnel ();
-        //     }
-        //     return result;
-        // }
-
         private static Tunnel CreateTunnel () {
             Tunnel result = null;
             Socket socket2Server = new Socket (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -129,7 +120,8 @@ namespace eagle.tunnel.dotnet.core {
         private static bool CheckIfInsideByRemote (string ip2Resolv, out bool inside) {
             bool result = false;
             inside = false;
-            Tunnel tunnel2Remote = NewTunnel2Remote ();
+            // Tunnel tunnel2Remote = NewTunnel2Remote ();
+            Tunnel tunnel2Remote = CreateTunnel();
             if (tunnel2Remote != null) {
                 if (tunnel2Remote.WriteR ("LOCATION " + ip2Resolv)) {
                     string reply = tunnel2Remote.ReadStringR ();
@@ -235,7 +227,8 @@ namespace eagle.tunnel.dotnet.core {
 
         private static IPAddress ResolvByProxy (string domain) {
             IPAddress result = null;
-            Tunnel tunnel = NewTunnel2Remote ();
+            // Tunnel tunnel = NewTunnel2Remote ();
+            Tunnel tunnel = CreateTunnel();
             if (tunnel != null) {
                 string req = EagleTunnelHandler.EagleTunnelRequestType.DNS.ToString ();
                 req += " " + domain;
@@ -282,7 +275,8 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         private static void ConnectByProxy (out Tunnel tunnel, EagleTunnelArgs e) {
-            tunnel = NewTunnel2Remote ();
+            // tunnel = NewTunnel2Remote ();
+            tunnel = CreateTunnel();
             if (tunnel != null) {
                 string req = EagleTunnelHandler.EagleTunnelRequestType.TCP.ToString ();
                 req += ' ' + e.EndPoint.Address.ToString ();
