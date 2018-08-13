@@ -3,11 +3,12 @@ facebook.com
 facebook.net
 fbcdn.net
 fbsbx.com
-gstatic.com
+gmail.com
 google.com
 googleapis.cn
 googleapis.com
 googlevideo.com
+gstatic.com
 instagram.com
 nytimes.com
 pinimg.com
