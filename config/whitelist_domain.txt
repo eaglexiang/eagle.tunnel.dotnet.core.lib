@@ -3,6 +3,7 @@ facebook.com
 facebook.net
 fbcdn.net
 fbsbx.com
+github.com
 gmail.com
 google.com
 googleapis.cn
