@@ -1,3 +1,6 @@
+bbc.com
+bbc.co.uk
+bbci.co.uk
 co.jp
 facebook.com
 facebook.net
@@ -11,6 +14,7 @@ googleapis.com
 googlevideo.com
 gstatic.com
 instagram.com
+mastodon.social
 nytimes.com
 pinimg.com
 rfa.org
