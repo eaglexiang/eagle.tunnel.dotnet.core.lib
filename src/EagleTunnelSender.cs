@@ -202,7 +202,7 @@ namespace eagle.tunnel.dotnet.core {
                         } else {
                             e.IP = ResolvDomain (e);
                             if (e.IP != null) {
-                                DnsCache cache = new DnsCache (e.Domain, e.IP, Conf.DnsCacheTti);
+                                DnsCache cache = new DnsCache (e.Domain, e.IP, Conf.DnsCacheTtl);
                                 dnsCaches.TryAdd (e.Domain, cache);
                                 e.Success = true;
                             }
