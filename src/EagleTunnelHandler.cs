@@ -93,10 +93,7 @@ namespace eagle.tunnel.dotnet.core
                 }
                 tunnel.WriteL(result);
             }
-            else
-            {
-                tunnel.Close();
-            }
+            tunnel.Close();
         }
 
         public static void StartResolvInside()
@@ -313,8 +310,8 @@ namespace eagle.tunnel.dotnet.core
                         reply = ip.ToString();
                     }
                     tunnel.WriteL(reply);
-                    tunnel.Close();
                 }
+                tunnel.Close();
             }
         }
 
