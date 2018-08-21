@@ -125,11 +125,14 @@ namespace eagle.tunnel.dotnet.core
                 {
                     if (ips2Resolv.TryDequeue(out string ip))
                     {
-                        if (CheckIfInsideByLocal(ip, out bool result))
+                        if (!insideCache.ContainsKey(ip)) // reduce repeated resolv
                         {
-                            if (!insideCache.TryAdd(ip, result))
+                            if (CheckIfInsideByLocal(ip, out bool result))
                             {
-                                insideCache[ip] = result;
+                                if (!insideCache.TryAdd(ip, result))
+                                {
+                                    insideCache[ip] = result;
+                                }
                             }
                         }
                     }
