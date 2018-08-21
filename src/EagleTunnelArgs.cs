@@ -76,9 +76,11 @@ namespace eagle.tunnel.dotnet.core
                 foreach (string item in Conf.whitelist_domain)
                 {
                     int ind = domain.LastIndexOf(item);
-                    if(ind>=0){
-                        if((ind+item.Length)==domain.Length){
-                            result=true;
+                    if (ind >= 0)
+                    {
+                        if ((ind + item.Length) == domain.Length)
+                        {
+                            result = true;
                             break;
                         }
                     }
@@ -101,10 +103,6 @@ namespace eagle.tunnel.dotnet.core
                 if (e.Success)
                 {
                     result = e.EnableProxy;
-                }
-                else
-                {
-                    result = true;
                 }
             }
             return result;

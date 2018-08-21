@@ -104,7 +104,7 @@ namespace eagle.tunnel.dotnet.core {
             string ip2Resolv = e.IP.ToString ();
             // local cache resolv firstly
             if (EagleTunnelHandler.insideCache.ContainsKey (ip2Resolv)) {
-                e.EnableProxy = !EagleTunnelHandler.insideCache[e.IP.ToString ()];
+                e.EnableProxy = !EagleTunnelHandler.insideCache[ip2Resolv];
                 e.Success = true;
             } else {
                 // req remote
@@ -125,7 +125,7 @@ namespace eagle.tunnel.dotnet.core {
             if (tunnel2Remote != null) {
                 if (tunnel2Remote.WriteR ("LOCATION " + ip2Resolv)) {
                     string reply = tunnel2Remote.ReadStringR ();
-                    if (reply != null) {
+                    if (!string.IsNullOrEmpty(reply)) {
                         if (bool.TryParse (reply, out inside)) {
                             result = true;
                         }
