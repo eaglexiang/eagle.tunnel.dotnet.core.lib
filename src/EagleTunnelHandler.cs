@@ -131,7 +131,7 @@ namespace eagle.tunnel.dotnet.core
                             {
                                 if (!insideCache.TryAdd(ip, result))
                                 {
-                                    insideCache[ip] = result;
+                                    throw new System.Exception();
                                 }
                             }
                         }
