@@ -154,12 +154,12 @@ namespace eagle.tunnel.dotnet.core {
 
         private static void HandleClientAsync (Socket socket2Client, int ipepIndex) {
             object[] args = new object[2] { socket2Client, ipepIndex };
-            Task taskHandleClient = new Task(()=>_handleClient(socket2Client, ipepIndex),
+            Task taskHandleClient = new Task(()=>handleClient(socket2Client, ipepIndex),
                 TaskCreationOptions.LongRunning);
             taskHandleClient.Start();
         }
 
-        private static void _handleClient (Socket socket2Client, int ipepIndex) {
+        private static void handleClient (Socket socket2Client, int ipepIndex) {
             Tunnel tunnel2Add = new Tunnel (socket2Client);
 
             while (clients.Count >= Conf.maxClientsCount) {

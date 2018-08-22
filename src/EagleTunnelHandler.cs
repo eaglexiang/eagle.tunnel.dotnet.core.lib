@@ -48,7 +48,6 @@ namespace eagle.tunnel.dotnet.core
                             {
                                 case EagleTunnelRequestType.DNS:
                                     HandleDNSReq(req, tunnel);
-                                    // no need to continue;
                                     break;
                                 case EagleTunnelRequestType.TCP:
                                     result = TCPReqHandle(req, tunnel);
@@ -89,7 +88,6 @@ namespace eagle.tunnel.dotnet.core
                 }
                 tunnel.WriteL(result);
             }
-            tunnel.Close();
         }
 
         public static void StartResolvInside()
@@ -310,7 +308,6 @@ namespace eagle.tunnel.dotnet.core
                     }
                     tunnel.WriteL(reply);
                 }
-                tunnel.Close();
             }
         }
 
