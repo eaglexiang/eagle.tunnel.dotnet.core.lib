@@ -28,6 +28,7 @@ twitter.com
 twitchsvc.net
 twimg.com
 voachinese.com
+voanews.com
 wikipedia.org
 wordpress.com
 youtube.com

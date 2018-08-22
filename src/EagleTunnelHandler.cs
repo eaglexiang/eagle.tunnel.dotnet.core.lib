@@ -30,12 +30,12 @@ namespace eagle.tunnel.dotnet.core
 
         public static bool Handle(string firstMsg, Tunnel tunnel)
         {
-            bool result;
+            bool result = false;
             if (!string.IsNullOrEmpty(firstMsg) &&
                 tunnel != null)
             {
-                result = CheckVersion(firstMsg, tunnel);
-                if (result)
+                bool isVersionRight = CheckVersion(firstMsg, tunnel);
+                if (isVersionRight)
                 {
                     EagleTunnelUser user = CheckAuthen(tunnel);
                     if (user != null)
@@ -67,10 +67,6 @@ namespace eagle.tunnel.dotnet.core
                         }
                     }
                 }
-            }
-            else
-            {
-                result = false;
             }
             return result;
         }
@@ -127,11 +123,11 @@ namespace eagle.tunnel.dotnet.core
                     {
                         if (!insideCache.ContainsKey(ip)) // reduce repeated resolv
                         {
-                            if (CheckIfInsideByLocal(ip, out bool result))
+                            if (CheckIfInside(ip, out bool result))
                             {
                                 if (!insideCache.TryAdd(ip, result))
                                 {
-                                    throw new System.Exception();
+                                    throw new System.Exception("ip exsit in insideCache");
                                 }
                             }
                         }
@@ -140,9 +136,9 @@ namespace eagle.tunnel.dotnet.core
             }
         }
 
-        private static bool CheckIfInsideByLocal(string ip, out bool result_Bool)
+        private static bool CheckIfInside(string ip, out bool result_Bool)
         {
-            string result_Str = CheckLocationByLocal(ip);
+            string result_Str = CheckLocation(ip);
             bool succeed;
             switch (result_Str)
             {
@@ -163,7 +159,7 @@ namespace eagle.tunnel.dotnet.core
             return succeed;
         }
 
-        public static string CheckLocationByLocal(string ip)
+        public static string CheckLocation(string ip)
         {
             string result = "failed";
             string req = @"https://ip2c.org/" + ip;
