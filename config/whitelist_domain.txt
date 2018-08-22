@@ -2,6 +2,7 @@ bbc.com
 bbc.co.uk
 bbci.co.uk
 co.jp
+creaders.net
 facebook.com
 facebook.net
 fbcdn.net
@@ -26,6 +27,7 @@ tw
 twitter.com
 twitchsvc.net
 twimg.com
+voachinese.com
 wikipedia.org
 wordpress.com
 youtube.com

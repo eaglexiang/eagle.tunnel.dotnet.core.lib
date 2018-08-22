@@ -75,10 +75,9 @@ namespace eagle.tunnel.dotnet.core
             {
                 foreach (string item in Conf.whitelist_domain)
                 {
-                    int ind = domain.LastIndexOf(item);
-                    if (ind >= 0)
+                    if (!string.IsNullOrEmpty(item))
                     {
-                        if ((ind + item.Length) == domain.Length)
+                        if (domain.EndsWith(item))
                         {
                             result = true;
                             break;
