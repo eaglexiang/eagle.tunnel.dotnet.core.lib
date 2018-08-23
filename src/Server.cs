@@ -67,7 +67,7 @@ namespace eagle.tunnel.dotnet.core {
 
                     clients = new ConcurrentQueue<Tunnel> ();
                     servers = new Socket[localAddresses.Length];
-                    reqGotNumbers = new ConCurrentCounter ();
+                    reqGotNumbers = new ConCurrentCounter (100);
                     Server.localAddresses = localAddresses;
                     IsRunning = true;
 
