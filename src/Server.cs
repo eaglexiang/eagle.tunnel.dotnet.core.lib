@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace eagle.tunnel.dotnet.core {
     public class Server {
-        public static string Version { get; } = "1.14.0";
+        public static string Version { get; } = "1.15.0";
         public static string ProtocolVersion { get; } = "1.1";
         private static ConcurrentQueue<Tunnel> clients; // connections from front ends
         private static Socket[] servers;
