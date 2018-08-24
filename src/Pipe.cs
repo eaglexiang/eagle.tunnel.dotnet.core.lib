@@ -134,7 +134,7 @@ namespace eagle.tunnel.dotnet.core
                 {
                     count = SocketFrom.Receive(bufferRead);
                 }
-                catch { count = 0; }
+                catch { count = -1; }
                 if (count > 0)
                 {
                     byte[] tmpBuffer = new byte[count];
@@ -175,18 +175,14 @@ namespace eagle.tunnel.dotnet.core
         }
 
         private void _Flow()
-        {
-            byte[] buffer = ReadByte();
+        {   
             while (IsRunning)
             {
+                byte[] buffer = ReadByte();
                 if (buffer != null)
                 {
                     int written = Write(buffer);
-                    if (written >= 0)
-                    {
-                        buffer = ReadByte();
-                    }
-                    else
+                    if (written <= 0)
                     {
                         Close();
                     }
