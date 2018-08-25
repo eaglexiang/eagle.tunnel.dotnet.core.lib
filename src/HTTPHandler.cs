@@ -31,16 +31,6 @@ namespace eagle.tunnel.dotnet.core
                             string re443 = "HTTP/1.1 200 Connection Established\r\n\r\n";
                             result = tunnel.WriteL(re443);
                         }
-                        else if (e0.HTTP_Request_Type == HTTPRequestType.GET)
-                        {
-                            // HTTP: relay new request to web server
-                            string newReq = HTTPReqArgs.CreateNewRequest(firstMsg);
-                            result = tunnel.WriteR(newReq);
-                        }
-                        else if (e0.HTTP_Request_Type == HTTPRequestType.POST)
-                        {
-                            result = tunnel.WriteR(firstMsg);
-                        }
                         else
                         {
                             // HTTP: relay new request to web server

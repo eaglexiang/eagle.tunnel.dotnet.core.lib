@@ -75,12 +75,19 @@ namespace eagle.tunnel.dotnet.core
                     List<string> linesList = new List<string>(lines);
                     linesList.RemoveAt(0);
                     Dictionary<string, string> keyValues = GetKeyValues(linesList);
-                    if(keyValues.TryGetValue("Proxy-Connection", out string connection)){
+                    if (keyValues.TryGetValue("Proxy-Connection", out string connection))
+                    {
                         keyValues.Remove("Proxy-Connection");
                         keyValues.TryAdd("Connection", connection);
                     }
+                    string[] restLines = Array.FindAll(linesList.ToArray(),
+                    line => !line.Contains(':'));
                     string rest = ExportKeyValues(keyValues);
-                    newReq = newFirstLine + rest + "\r\n";
+                    newReq = newFirstLine + rest;
+                    foreach (string line in restLines)
+                    {
+                        newReq += line + "\r\n";
+                    }
                 }
             }
             return newReq;
