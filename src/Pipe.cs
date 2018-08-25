@@ -65,6 +65,19 @@ namespace eagle.tunnel.dotnet.core
             EncryptionKey = encryptionKey;
         }
 
+        public void Restore(Socket from = null, Socket to = null, string user = null, byte encryptionKey = 0)
+        {
+            SocketFrom = from;
+            SocketTo = to;
+            EncryptFrom = false;
+            EncryptTo = false;
+
+            UserFrom = user;
+            BytesTransferred = 0;
+            IsRunning = false;
+            EncryptionKey = encryptionKey;
+        }
+
         public int Write(byte[] buffer, int offset, int count)
         {
             int result = -1;

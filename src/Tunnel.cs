@@ -121,6 +121,13 @@ namespace eagle.tunnel.dotnet.core
             IsOpening = true;
         }
 
+        public void Restore(Socket left = null, Socket right = null, byte encryptionKey = 0)
+        {
+            pipeL2R.Restore(left, right, null, encryptionKey);
+            pipeR2L.Restore(right, left, null, encryptionKey);
+            IsOpening = true;
+        }
+
         public void Flow()
         {
             pipeL2R.Flow();

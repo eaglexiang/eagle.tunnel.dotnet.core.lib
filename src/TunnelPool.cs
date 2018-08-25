@@ -17,9 +17,7 @@ namespace eagle.tunnel.dotnet.core
             Tunnel result;
             if (pool.TryDequeue(out result))
             {
-                result.SocketL = left;
-                result.SocketR = right;
-                result.EncryptionKey = encryptionKey;
+                result.Restore(left, right, encryptionKey);
             }
             else
             {
@@ -32,9 +30,7 @@ namespace eagle.tunnel.dotnet.core
                     if (used.TryDequeue(out result))
                     {
                         result.Close();
-                        result.SocketL = left;
-                        result.SocketR = right;
-                        result.EncryptionKey = encryptionKey;
+                        result.Restore(left, right, encryptionKey);
                     }
                     else
                     {
@@ -88,7 +84,7 @@ namespace eagle.tunnel.dotnet.core
                 }
                 else
                 {
-                    Thread.Sleep(10000);
+                    Thread.Sleep(100);
                 }
             }
         }
