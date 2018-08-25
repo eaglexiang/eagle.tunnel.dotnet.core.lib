@@ -15,17 +15,30 @@ namespace eagle.tunnel.dotnet.core
         public static Tunnel Get(Socket left = null, Socket right = null, byte encryptionKey = 0)
         {
             Tunnel result;
-            if(!pool.TryDequeue(out result)){
-                if(used.Count<Conf.maxClientsCount){
+            if (pool.TryDequeue(out result))
+            {
+                result.SocketL = left;
+                result.SocketR = right;
+                result.EncryptionKey = encryptionKey;
+            }
+            else
+            {
+                if (used.Count < Conf.maxClientsCount)
+                {
                     result = new Tunnel(left, right, encryptionKey);
-                }else{
-                    if(used.TryDequeue(out result)){
+                }
+                else
+                {
+                    if (used.TryDequeue(out result))
+                    {
                         result.Close();
                         result.SocketL = left;
                         result.SocketR = right;
                         result.EncryptionKey = encryptionKey;
-                    }else{
-                        throw(new System.Exception("please add value of maxClients"));
+                    }
+                    else
+                    {
+                        throw (new System.Exception("please add value of maxClients"));
                     }
                 }
             }
@@ -43,7 +56,7 @@ namespace eagle.tunnel.dotnet.core
                 if (!IsRunning)
                 {
                     used = new ConcurrentQueue<Tunnel>();
-                    Task.Factory.StartNew(()=>CheckTunnels(), TaskCreationOptions.LongRunning);
+                    Task.Factory.StartNew(() => CheckTunnels(), TaskCreationOptions.LongRunning);
                     IsRunning = true;
                 }
             }
