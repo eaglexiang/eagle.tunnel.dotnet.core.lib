@@ -79,8 +79,8 @@ namespace eagle.tunnel.dotnet.core
                     else
                     {
                         used.Enqueue(tunnel2Check);
+                        Thread.Sleep(100);
                     }
-                    Thread.Sleep(100);
                 }
                 else
                 {

@@ -238,10 +238,10 @@ namespace eagle.tunnel.dotnet.core
                     try
                     {
                         SocketFrom.Shutdown(SocketShutdown.Both);
+                        Thread.Sleep(10);
+                        SocketFrom.Close();
                     }
                     catch {; }
-                    Thread.Sleep(10);
-                    SocketFrom.Close();
                 }
             }
             if (SocketTo != null)
@@ -251,10 +251,10 @@ namespace eagle.tunnel.dotnet.core
                     try
                     {
                         SocketTo.Shutdown(SocketShutdown.Both);
+                        Thread.Sleep(10);
+                        SocketTo.Close();
                     }
                     catch {; }
-                    Thread.Sleep(10);
-                    SocketTo.Close();
                 }
             }
         }

@@ -144,10 +144,11 @@ namespace eagle.tunnel.dotnet.core
                     try
                     {
                         SocketL.Shutdown(SocketShutdown.Both);
+                        System.Threading.Thread.Sleep(10);
+                        SocketL.Close();// must be in try block, 
+                                        // because may be called at another thread.
                     }
                     catch {; }
-                    System.Threading.Thread.Sleep(10);
-                    SocketL.Close();
                 }
                 SocketL = null;
             }
@@ -158,10 +159,11 @@ namespace eagle.tunnel.dotnet.core
                     try
                     {
                         SocketR.Shutdown(SocketShutdown.Both);
+                        System.Threading.Thread.Sleep(10);
+                        SocketR.Close(); // must be in try block, 
+                                         // because may be called at another thread.
                     }
                     catch {; }
-                    System.Threading.Thread.Sleep(10);
-                    SocketR.Close();
                 }
                 SocketR = null;
             }
