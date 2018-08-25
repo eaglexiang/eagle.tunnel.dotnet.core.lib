@@ -88,8 +88,8 @@ namespace eagle.tunnel.dotnet.core
                 bool result;
                 if (SocketL != null && SocketR != null)
                 {
-                    result = SocketL.Connected;
-                    result = SocketR.Connected && result;
+                    result = pipeL2R.IsRunning;
+                    result = result&& pipeR2L.IsRunning;
                 }
                 else
                 {

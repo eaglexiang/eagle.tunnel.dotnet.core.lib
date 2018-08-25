@@ -12,7 +12,7 @@ namespace eagle.tunnel.dotnet.core
     {
         public static string Version { get; } = "1.15.0";
         public static string ProtocolVersion { get; } = "1.1";
-        private static ConcurrentQueue<Tunnel> clients; // connections from front ends
+        // private static ConcurrentQueue<Tunnel> clients; // connections from front ends
         private static Socket[] servers;
         private static IPEndPoint[] localAddresses;
         private static Thread threadLimitCheck;
@@ -82,8 +82,9 @@ namespace eagle.tunnel.dotnet.core
                     //         EagleTunnelSender.OpenTunnelPool ();
                     //     }
                     // }
+                    TunnelPool.StartCheck();
 
-                    clients = new ConcurrentQueue<Tunnel>();
+                    // clients = new ConcurrentQueue<Tunnel>();
                     servers = new Socket[localAddresses.Length];
                     reqGotNumbers = new ConCurrentCounter(100);
                     Server.localAddresses = localAddresses;
@@ -210,16 +211,7 @@ namespace eagle.tunnel.dotnet.core
 
         private static void handleClient(Socket socket2Client, int ipepIndex)
         {
-            Tunnel tunnel2Add = new Tunnel(socket2Client);
-
-            while (clients.Count >= Conf.maxClientsCount)
-            {
-                if (clients.TryDequeue(out Tunnel tunnel2Close))
-                {
-                    tunnel2Close.Close();
-                }
-            }
-            clients.Enqueue(tunnel2Add);
+            Tunnel tunnel2Add = TunnelPool.Get(socket2Client, null, Conf.encryptionKey);
             bool result = RequestHandler.Handle(tunnel2Add);
             if (result)
             {
@@ -228,38 +220,6 @@ namespace eagle.tunnel.dotnet.core
             else
             {
                 tunnel2Add.Close();
-            }
-            // release sources for dead connections
-            if (clients.Count > Conf.maxClientsCount / 3)
-            {
-                double closing = 10;
-                double closed = closing;
-                while ((closed / closing) >= 0.3)
-                {
-                    closed = 0;
-                    for (int i = 0; i < closing; ++i)
-                    {
-                        if (clients.TryDequeue(out Tunnel tunnel2Check))
-                        {
-                            if (!tunnel2Check.IsOpening)
-                            {
-                                if (tunnel2Check.IsFlowing)
-                                {
-                                    clients.Enqueue(tunnel2Check);
-                                }
-                                else
-                                {
-                                    tunnel2Check.Close();
-                                    closed += 1;
-                                }
-                            }
-                            else
-                            {
-                                clients.Enqueue(tunnel2Check);
-                            }
-                        }
-                    }
-                }
             }
             reqGotNumbers.Down();
         }
@@ -323,16 +283,9 @@ namespace eagle.tunnel.dotnet.core
                         }
                     }
                 }
-                // shut down all connections
-                while (clients.Count > 0)
-                {
-                    if (clients.TryDequeue(out Tunnel tunnel2Close))
-                    {
-                        tunnel2Close.Close();
-                    }
-                }
                 EagleTunnelHandler.StopResolvInside();
                 EagleTunnelSender.CloseTunnelPool();
+                TunnelPool.StopCheck();
             }
         }
 

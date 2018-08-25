@@ -98,10 +98,10 @@ namespace eagle.tunnel.dotnet.core
                         try
                         {
                             socket2Server.Shutdown(SocketShutdown.Both);
-                            System.Threading.Thread.Sleep(10);
-                            socket2Server.Close();
                         }
                         catch (SocketException) {; }
+                        System.Threading.Thread.Sleep(10);
+                        socket2Server.Close();
                     }
                 }
             }
@@ -207,7 +207,8 @@ namespace eagle.tunnel.dotnet.core
                         string reply = Encoding.UTF8.GetString(buffer, 0, read);
                         if (reply == "valid valid valid")
                         {
-                            result = new Tunnel(null, socket2Server);
+                            // result = new Tunnel(null, socket2Server, Conf.encryptionKey);
+                            result = TunnelPool.Get(null, socket2Server, Conf.encryptionKey);
                             result.EncryptR = true;
                         }
                     }
@@ -407,7 +408,8 @@ namespace eagle.tunnel.dotnet.core
             }
             if (socket2Server.Connected)
             {
-                tunnel = new Tunnel(null, socket2Server);
+                // tunnel = new Tunnel(null, socket2Server, Conf.encryptionKey);
+                tunnel = TunnelPool.Get(null, socket2Server, Conf.encryptionKey);
             }
         }
     }
