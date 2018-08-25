@@ -46,7 +46,7 @@ namespace eagle.tunnel.dotnet.core
         }
         public bool EncryptFrom { get; set; }
         public bool EncryptTo { get; set; }
-        private static byte EncryptionKey;
+        public byte EncryptionKey { get; set; }
         private byte[] bufferRead;
         public bool IsRunning { get; private set; }
         public object IsWaiting { get; set; }
@@ -175,7 +175,7 @@ namespace eagle.tunnel.dotnet.core
         }
 
         private void _Flow()
-        {   
+        {
             while (IsRunning)
             {
                 byte[] buffer = ReadByte();
@@ -194,7 +194,7 @@ namespace eagle.tunnel.dotnet.core
             }
         }
 
-        public static byte[] Encrypt(byte[] src)
+        public byte[] Encrypt(byte[] src)
         {
             byte[] des = new byte[src.Length];
             for (int i = 0; i < src.Length; ++i)
@@ -204,7 +204,7 @@ namespace eagle.tunnel.dotnet.core
             return des;
         }
 
-        public static byte[] Decrypt(byte[] src)
+        public byte[] Decrypt(byte[] src)
         {
             byte[] des = new byte[src.Length];
             for (int i = 0; i < src.Length; ++i)

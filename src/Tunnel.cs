@@ -89,7 +89,7 @@ namespace eagle.tunnel.dotnet.core
                 if (SocketL != null && SocketR != null)
                 {
                     result = pipeL2R.IsRunning;
-                    result = result&& pipeR2L.IsRunning;
+                    result = result && pipeR2L.IsRunning;
                 }
                 else
                 {
@@ -99,9 +99,22 @@ namespace eagle.tunnel.dotnet.core
             }
         }
 
+        public byte EncryptionKey
+        {
+            get
+            {
+                return pipeL2R.EncryptionKey;
+            }
+            set
+            {
+                pipeL2R.EncryptionKey = value;
+                pipeR2L.EncryptionKey = value;
+            }
+        }
+
         public bool IsOpening { get; set; }
 
-        public Tunnel(Socket socketl = null, Socket socketr = null,byte encryptionKey = 0)
+        public Tunnel(Socket socketl = null, Socket socketr = null, byte encryptionKey = 0)
         {
             pipeL2R = new Pipe(socketl, socketr, null, encryptionKey);
             pipeR2L = new Pipe(socketr, socketl, null, encryptionKey);
@@ -129,6 +142,7 @@ namespace eagle.tunnel.dotnet.core
                     System.Threading.Thread.Sleep(10);
                     SocketL.Close();
                 }
+                SocketL = null;
             }
             if (SocketR != null)
             {
@@ -142,6 +156,7 @@ namespace eagle.tunnel.dotnet.core
                     System.Threading.Thread.Sleep(10);
                     SocketR.Close();
                 }
+                SocketR = null;
             }
             IsOpening = false;
         }

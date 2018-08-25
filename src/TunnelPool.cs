@@ -19,7 +19,12 @@ namespace eagle.tunnel.dotnet.core
                 if(used.Count<Conf.maxClientsCount){
                     result = new Tunnel(left, right, encryptionKey);
                 }else{
-                    if(!used.TryDequeue(out result)){
+                    if(used.TryDequeue(out result)){
+                        result.Close();
+                        result.SocketL = left;
+                        result.SocketR = right;
+                        result.EncryptionKey = encryptionKey;
+                    }else{
                         throw(new System.Exception("please add value of maxClients"));
                     }
                 }
@@ -66,7 +71,7 @@ namespace eagle.tunnel.dotnet.core
                     {
                         used.Enqueue(tunnel2Check);
                     }
-                    Thread.Sleep(1000);
+                    Thread.Sleep(100);
                 }
                 else
                 {
