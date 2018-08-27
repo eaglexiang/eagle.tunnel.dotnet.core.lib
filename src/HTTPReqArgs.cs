@@ -83,10 +83,12 @@ namespace eagle.tunnel.dotnet.core
                     string[] restLines = Array.FindAll(linesList.ToArray(),
                     line => !line.Contains(':'));
                     string rest = ExportKeyValues(keyValues);
-                    newReq = newFirstLine + rest;
+                    newReq = newFirstLine + rest + "\r\n";
                     foreach (string line in restLines)
                     {
-                        newReq += line + "\r\n";
+                        if(!string.IsNullOrEmpty(line)){
+                            newReq += line + "\r\n";
+                        }
                     }
                 }
             }
