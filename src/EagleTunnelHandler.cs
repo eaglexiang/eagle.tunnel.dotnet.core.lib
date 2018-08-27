@@ -231,7 +231,6 @@ namespace eagle.tunnel.dotnet.core
             EagleTunnelUser result = null;
             if (Conf.allConf.ContainsKey("user-check") && Conf.allConf["user-check"][0] == "on")
             {
-                byte[] buffer = new byte[100];
                 string req = tunnel.ReadStringL();
                 if (!string.IsNullOrEmpty(req))
                 {

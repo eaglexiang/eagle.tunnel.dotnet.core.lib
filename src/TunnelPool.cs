@@ -74,6 +74,7 @@ namespace eagle.tunnel.dotnet.core
                 {
                     if (!(tunnel2Check.IsOpening || tunnel2Check.IsFlowing))
                     {
+                        tunnel2Check.Restore();
                         pool.Enqueue(tunnel2Check); // reuse
                     }
                     else

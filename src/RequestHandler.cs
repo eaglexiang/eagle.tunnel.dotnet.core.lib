@@ -4,63 +4,85 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace eagle.tunnel.dotnet.core {
-    public class RequestHandler {
+namespace eagle.tunnel.dotnet.core
+{
+    public class RequestHandler
+    {
 
-        enum RequestType {
+        enum RequestType
+        {
             Unknown,
             SOCKS5,
             HTTP_Proxy,
             Eagle_Tunnel
         }
 
-        private RequestHandler () { }
+        private RequestHandler() { }
 
-        public static bool Handle (Tunnel tunnel) {
+        public static bool Handle(Tunnel tunnel)
+        {
             bool result = false;
-            if (tunnel == null) {
+            if (tunnel == null)
+            {
                 result = false;
-            } else {
-                byte[] firstMsg = tunnel.ReadL ();
-                if (firstMsg != null) {
-                    string firstMsg_Str = Encoding.UTF8.GetString (firstMsg);
-                    RequestType reqType = GetType (firstMsg);
-                    switch (reqType) {
+            }
+            else
+            {
+                ByteBuffer firstMsg = ByteBufferPool.Get();
+                int read = tunnel.ReadL(firstMsg);
+                if (read > 0)
+                {
+                    string firstMsg_Str = firstMsg.ToString();
+                    RequestType reqType = GetType(firstMsg);
+                    switch (reqType)
+                    {
                         case RequestType.Eagle_Tunnel:
-                            if (Conf.EnableEagleTunnel) {
-                                result = EagleTunnelHandler.Handle (
+                            if (Conf.EnableEagleTunnel)
+                            {
+                                result = EagleTunnelHandler.Handle(
                                     firstMsg_Str, tunnel);
                             }
                             break;
                         case RequestType.HTTP_Proxy:
-                            if (Conf.EnableHTTP) {
-                                result = HTTPHandler.Handle (
+                            if (Conf.EnableHTTP)
+                            {
+                                result = HTTPHandler.Handle(
                                     firstMsg_Str, tunnel);
                             }
                             break;
                         case RequestType.SOCKS5:
-                            if (Conf.EnableSOCKS) {
-                                result = SocksHandler.Handle (
+                            if (Conf.EnableSOCKS)
+                            {
+                                result = SocksHandler.Handle(
                                     firstMsg, tunnel);
                             }
                             break;
                     }
                 }
+                firstMsg.Using = false;
             }
             return result;
         }
 
-        private static RequestType GetType (byte[] msg) {
+        private static RequestType GetType(ByteBuffer msg)
+        {
             RequestType result = RequestType.Unknown;
-            if (msg[0] == 5) {
+            if (msg[0] == 5)
+            {
                 result = RequestType.SOCKS5;
-            } else {
-                string msgStr = Encoding.UTF8.GetString (msg);
-                string[] args = msgStr.Split (' ');
-                if (args.Length >= 2) {
-                    if (Enum.TryParse (args[0], out HTTPRequestType type)) {
+            }
+            else
+            {
+                string msgStr = msg.ToString();
+                string[] args = msgStr.Split(' ');
+                if (args.Length >= 2)
+                {
+                    if (Enum.TryParse(args[0], out HTTPRequestType type))
+                    {
                         result = RequestType.HTTP_Proxy;
-                    } else if (args[0] == "eagle_tunnel") {
+                    }
+                    else if (args[0] == "eagle_tunnel")
+                    {
                         result = RequestType.Eagle_Tunnel;
                     }
                 }
