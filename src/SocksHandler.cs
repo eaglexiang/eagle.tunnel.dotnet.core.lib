@@ -11,7 +11,7 @@ namespace eagle.tunnel.dotnet.core {
             Udp
         }
 
-        public static bool Handle (byte[] request, Tunnel tunnel) {
+        public static bool Handle (ByteBuffer request, Tunnel tunnel) {
             bool result = false;
             if (request != null && tunnel != null) {
                 int version = request[0];
@@ -20,8 +20,9 @@ namespace eagle.tunnel.dotnet.core {
                     string reply = "\u0005\u0000";
                     result = tunnel.WriteL (reply);
                     if (result) {
-                        byte[] buffer = tunnel.ReadL ();
-                        if (buffer != null && buffer.Length >= 2) {
+                        ByteBuffer buffer = ByteBufferPool.Get();
+                        int read = tunnel.ReadL (buffer);
+                        if (read >= 2) {
                             SOCKS5_CMDType cmdType = (SOCKS5_CMDType) buffer[1];
                             switch (cmdType) {
                                 case SOCKS5_CMDType.Connect:
@@ -29,13 +30,14 @@ namespace eagle.tunnel.dotnet.core {
                                     break;
                             }
                         }
+                        buffer.Using = false;
                     }
                 }
             }
             return result;
         }
 
-        private static bool HandleTCPReq (byte[] request, Tunnel tunnel) {
+        private static bool HandleTCPReq (ByteBuffer request, Tunnel tunnel) {
             bool result = false;
             if (request != null && tunnel != null) {
                 IPAddress ip = GetIP (request);
@@ -65,7 +67,7 @@ namespace eagle.tunnel.dotnet.core {
             return result;
         }
 
-        public static IPAddress GetIP (byte[] request) {
+        public static IPAddress GetIP (ByteBuffer request) {
             IPAddress ip;
             int destype = request[3];
             string ip_str;
@@ -106,7 +108,7 @@ namespace eagle.tunnel.dotnet.core {
             return ip;
         }
 
-        public static int GetPort (byte[] request) {
+        public static int GetPort (ByteBuffer request) {
             try {
                 int destype = request[3];
                 int port;

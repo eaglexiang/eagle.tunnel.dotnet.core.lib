@@ -136,8 +136,6 @@ namespace eagle.tunnel.dotnet.core {
         public static int DnsCacheTtl { get; set; } = 7200; // default 2h
         public static byte encryptionKey;
 
-        private static object lockOfIndex;
-
         public static bool LocalAddress_Set (string address) {
             bool result = false;
             if (address != null) {
@@ -184,16 +182,8 @@ namespace eagle.tunnel.dotnet.core {
 
         private static int indexOfRemoteAddresses;
         private static int GetIndexOfRemoteAddresses () {
-            int result = 0;
-            if (RemoteAddresses != null) {
-                if (RemoteAddresses.Length > 1) {
-                    lock (lockOfIndex) {
-                        indexOfRemoteAddresses += 1;
-                        indexOfRemoteAddresses %= RemoteAddresses.Length;
-                    }
-                    result = indexOfRemoteAddresses;
-                }
-            }
+            int result = indexOfRemoteAddresses++;
+            result %= remoteAddresses.Length;
             return result;
         }
 
@@ -258,7 +248,6 @@ namespace eagle.tunnel.dotnet.core {
             try {
                 List<string> localAddressStrs = Conf.allConf["listen"];
                 localAddresses = CreateEndPoints (localAddressStrs);
-                lockOfIndex = new object ();
 
             } catch (KeyNotFoundException) {
                 Console.WriteLine ("Warning: Listen not found");

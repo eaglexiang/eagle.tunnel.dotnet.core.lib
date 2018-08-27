@@ -9,7 +9,6 @@ namespace eagle.tunnel.dotnet.core {
         public string ID { get; }
         public string Password { get; set; }
         public int SpeedLimit { get; set; } // B/s
-        private object lockOfSpeedCheck;
         private ConcurrentQueue<Tunnel> tunnels;
         private object IsWaiting;
         private int bytesLastChecked;
@@ -20,7 +19,6 @@ namespace eagle.tunnel.dotnet.core {
             Password = password;
             SpeedLimit = 0;
             tunnels = new ConcurrentQueue<Tunnel> ();
-            lockOfSpeedCheck = new object ();
             IsWaiting = false;
             speedNow = 0;
             bytesLastChecked = 0;

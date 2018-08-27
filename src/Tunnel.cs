@@ -88,8 +88,8 @@ namespace eagle.tunnel.dotnet.core
                 bool result;
                 if (SocketL != null && SocketR != null)
                 {
-                    result = SocketL.Connected;
-                    result = SocketR.Connected && result;
+                    result = pipeL2R.IsRunning;
+                    result = result && pipeR2L.IsRunning;
                 }
                 else
                 {
@@ -99,12 +99,32 @@ namespace eagle.tunnel.dotnet.core
             }
         }
 
+        public byte EncryptionKey
+        {
+            get
+            {
+                return pipeL2R.EncryptionKey;
+            }
+            set
+            {
+                pipeL2R.EncryptionKey = value;
+                pipeR2L.EncryptionKey = value;
+            }
+        }
+
         public bool IsOpening { get; set; }
 
-        public Tunnel(Socket socketl = null, Socket socketr = null,byte encryptionKey = 0)
+        public Tunnel(Socket socketl = null, Socket socketr = null, byte encryptionKey = 0)
         {
             pipeL2R = new Pipe(socketl, socketr, null, encryptionKey);
             pipeR2L = new Pipe(socketr, socketl, null, encryptionKey);
+            IsOpening = true;
+        }
+
+        public void Restore(Socket left = null, Socket right = null, byte encryptionKey = 0)
+        {
+            pipeL2R.Restore(left, right, null, encryptionKey);
+            pipeR2L.Restore(right, left, null, encryptionKey);
             IsOpening = true;
         }
 
@@ -124,11 +144,13 @@ namespace eagle.tunnel.dotnet.core
                     try
                     {
                         SocketL.Shutdown(SocketShutdown.Both);
+                        System.Threading.Thread.Sleep(10);
+                        SocketL.Close();// must be in try block, 
+                                        // because may be called at another thread.
                     }
                     catch {; }
-                    System.Threading.Thread.Sleep(10);
-                    SocketL.Close();
                 }
+                SocketL = null;
             }
             if (SocketR != null)
             {
@@ -137,11 +159,13 @@ namespace eagle.tunnel.dotnet.core
                     try
                     {
                         SocketR.Shutdown(SocketShutdown.Both);
+                        System.Threading.Thread.Sleep(10);
+                        SocketR.Close(); // must be in try block, 
+                                         // because may be called at another thread.
                     }
                     catch {; }
-                    System.Threading.Thread.Sleep(10);
-                    SocketR.Close();
                 }
+                SocketR = null;
             }
             IsOpening = false;
         }
@@ -158,22 +182,22 @@ namespace eagle.tunnel.dotnet.core
 
         public bool WriteL(string msg)
         {
-            return pipeR2L.Write(msg) >= 0;
+            return pipeR2L.Write(msg) > 0;
         }
 
         public bool WriteR(string msg)
         {
-            return pipeL2R.Write(msg) >= 0;
+            return pipeL2R.Write(msg) > 0;
         }
 
-        public byte[] ReadL()
+        public int ReadL(ByteBuffer buffer)
         {
-            return pipeL2R.ReadByte();
+            return pipeL2R.ReadByte(buffer);
         }
 
-        public byte[] ReadR()
+        public int ReadR(ByteBuffer buffer)
         {
-            return pipeR2L.ReadByte();
+            return pipeR2L.ReadByte(buffer);
         }
     }
 }

@@ -98,10 +98,10 @@ namespace eagle.tunnel.dotnet.core
                         try
                         {
                             socket2Server.Shutdown(SocketShutdown.Both);
-                            System.Threading.Thread.Sleep(10);
-                            socket2Server.Close();
                         }
                         catch (SocketException) {; }
+                        System.Threading.Thread.Sleep(10);
+                        socket2Server.Close();
                     }
                 }
             }
@@ -186,32 +186,23 @@ namespace eagle.tunnel.dotnet.core
             if (socket2Server != null)
             {
                 string req = "eagle_tunnel " + Server.ProtocolVersion + " simple";
-                byte[] buffer = Encoding.ASCII.GetBytes(req);
-                int written;
-                try
-                {
-                    written = socket2Server.Send(buffer);
-                }
-                catch { written = 0; }
+                ByteBuffer buffer = ByteBufferPool.Get();
+                buffer.Set(req, Encoding.ASCII);
+                int written = buffer.Send(socket2Server);
                 if (written > 0)
                 {
-                    buffer = new byte[100];
-                    int read;
-                    try
+                    buffer.Receive(socket2Server);
+                    if (buffer.Length > 0)
                     {
-                        read = socket2Server.Receive(buffer);
-                    }
-                    catch { read = 0; }
-                    if (read > 0)
-                    {
-                        string reply = Encoding.UTF8.GetString(buffer, 0, read);
+                        string reply = buffer.ToString();
                         if (reply == "valid valid valid")
                         {
-                            result = new Tunnel(null, socket2Server);
+                            result = TunnelPool.Get(null, socket2Server, Conf.encryptionKey);
                             result.EncryptR = true;
                         }
                     }
                 }
+                buffer.Using = false;
             }
             return result;
         }
@@ -407,7 +398,7 @@ namespace eagle.tunnel.dotnet.core
             }
             if (socket2Server.Connected)
             {
-                tunnel = new Tunnel(null, socket2Server);
+                tunnel = TunnelPool.Get(null, socket2Server, Conf.encryptionKey);
             }
         }
     }
