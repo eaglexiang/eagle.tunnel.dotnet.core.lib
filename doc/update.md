@@ -77,3 +77,7 @@
 ### 1.16.0
 
 新增TunnelPool，减少GC
+
+### 1.17.0
+
+新增ByteBufferPool，减少GC
