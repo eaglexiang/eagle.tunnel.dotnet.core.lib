@@ -1,4 +1,5 @@
 using System.Net.Sockets;
+using System.Text;
 
 namespace eagle.tunnel.dotnet.core
 {
@@ -90,6 +91,8 @@ namespace eagle.tunnel.dotnet.core
                 {
                     result = pipeL2R.IsRunning;
                     result = result && pipeR2L.IsRunning;
+                    result = result && SocketL.Connected;
+                    result = result && SocketR.Connected;
                 }
                 else
                 {
@@ -114,90 +117,78 @@ namespace eagle.tunnel.dotnet.core
 
         public bool IsOpening { get; set; }
 
-        public Tunnel(Socket socketl = null, Socket socketr = null, byte encryptionKey = 0)
+        public Tunnel (Socket socketl = null, Socket socketr = null, byte encryptionKey = 0)
         {
-            pipeL2R = new Pipe(socketl, socketr, null, encryptionKey);
-            pipeR2L = new Pipe(socketr, socketl, null, encryptionKey);
+            pipeL2R = new Pipe (socketl, socketr, null, encryptionKey);
+            pipeR2L = new Pipe (socketr, socketl, null, encryptionKey);
             IsOpening = true;
         }
 
-        public void Restore(Socket left = null, Socket right = null, byte encryptionKey = 0)
+        public void Restore (Socket left = null, Socket right = null, byte encryptionKey = 0)
         {
-            pipeL2R.Restore(left, right, null, encryptionKey);
-            pipeR2L.Restore(right, left, null, encryptionKey);
+            pipeL2R.Restore (left, right, null, encryptionKey);
+            pipeR2L.Restore (right, left, null, encryptionKey);
             IsOpening = true;
         }
 
-        public void Flow()
+        public void Release ()
         {
-            pipeL2R.Flow();
-            pipeR2L.Flow();
+            pipeL2R.Release ();
+            pipeR2L.Release ();
+        }
+
+        public void Flow ()
+        {
+            pipeL2R.Flow ();
+            pipeR2L.Flow ();
             IsOpening = false;
         }
 
-        public void Close()
+        public void Close ()
         {
-            if (SocketL != null)
-            {
-                if (SocketL.Connected)
-                {
-                    try
-                    {
-                        SocketL.Shutdown(SocketShutdown.Both);
-                        System.Threading.Thread.Sleep(10);
-                        SocketL.Close();// must be in try block, 
-                                        // because may be called at another thread.
-                    }
-                    catch {; }
-                }
-                SocketL = null;
-            }
-            if (SocketR != null)
-            {
-                if (SocketR.Connected)
-                {
-                    try
-                    {
-                        SocketR.Shutdown(SocketShutdown.Both);
-                        System.Threading.Thread.Sleep(10);
-                        SocketR.Close(); // must be in try block, 
-                                         // because may be called at another thread.
-                    }
-                    catch {; }
-                }
-                SocketR = null;
-            }
+            pipeL2R.Close ();
+            pipeR2L.Close ();
             IsOpening = false;
         }
 
-        public string ReadStringL()
+        public string ReadStringL ()
         {
-            return pipeL2R.ReadString();
+            return pipeL2R.ReadString ();
         }
 
-        public string ReadStringR()
+        public string ReadStringR ()
         {
-            return pipeR2L.ReadString();
+            return pipeR2L.ReadString ();
         }
 
-        public bool WriteL(string msg)
+        public bool WriteL (string msg, Encoding code)
         {
-            return pipeR2L.Write(msg) > 0;
+            return pipeR2L.Write (msg, code) > 0;
         }
 
-        public bool WriteR(string msg)
+        public bool WriteL (string msg)
         {
-            return pipeL2R.Write(msg) > 0;
+            return WriteL (msg, Encoding.UTF8);
         }
 
-        public int ReadL(ByteBuffer buffer)
+        public bool WriteR (string msg, Encoding code)
         {
-            return pipeL2R.ReadByte(buffer);
+            return pipeL2R.Write (msg, code) > 0;
         }
 
-        public int ReadR(ByteBuffer buffer)
+        public bool WriteR (string msg)
         {
-            return pipeR2L.ReadByte(buffer);
+            return WriteR (msg, Encoding.UTF8);
+        }
+
+        public int ReadL (ByteBuffer buffer)
+        {
+            return pipeL2R.ReadByte (buffer);
+        }
+
+        public int ReadR (ByteBuffer buffer)
+        {
+            return pipeR2L.ReadByte (buffer);
         }
     }
 }

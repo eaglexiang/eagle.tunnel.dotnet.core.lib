@@ -9,106 +9,103 @@ namespace eagle.tunnel.dotnet.core
     public class EagleTunnelSender
     {
         private static ConcurrentDictionary<string, DnsCache> dnsCaches =
-            new ConcurrentDictionary<string, DnsCache>();
+            new ConcurrentDictionary<string, DnsCache> ();
 
         public static ConcurrentDictionary<string, bool> insideCache;
 
-        public static void FlushDnsCaches()
+        public static void FlushDnsCaches ()
         {
-            dnsCaches = new ConcurrentDictionary<string, DnsCache>();
+            dnsCaches = new ConcurrentDictionary<string, DnsCache> ();
         }
 
         private static bool IsRunning { get; set; } = false;
         private static ConcurrentQueue<Tunnel> tunnels2Allot =
-            new ConcurrentQueue<Tunnel>();
+            new ConcurrentQueue<Tunnel> ();
         private const int maxCountOfTunnels2Allot = 20;
 
-        private static Tunnel NewTunnel2Remote()
-        {
-            Tunnel result;
-            if (tunnels2Allot.TryDequeue(out Tunnel tunnel))
-            {
-                result = tunnel;
-            }
-            else
-            {
-                result = CreateTunnel();
-            }
-            return result;
-        }
+        // private static Tunnel NewTunnel2Remote ()
+        // {
+        //     Tunnel result;
+        //     if (tunnels2Allot.TryDequeue (out Tunnel tunnel))
+        //     {
+        //         result = tunnel;
+        //     }
+        //     else
+        //     {
+        //         result = CreateTunnel ();
+        //     }
+        //     return result;
+        // }
 
-        private static void KeepTunnelPool()
-        {
-            while (IsRunning)
-            {
-                if (tunnels2Allot.Count > maxCountOfTunnels2Allot)
-                {
-                    System.Threading.Thread.Sleep(100);
-                }
-                else
-                {
-                    Tunnel tunnel = CreateTunnel();
-                    if (tunnel != null)
-                    {
-                        tunnels2Allot.Enqueue(tunnel);
-                    }
-                }
-            }
-        }
+        // private static void KeepTunnelPool ()
+        // {
+        //     while (IsRunning)
+        //     {
+        //         if (tunnels2Allot.Count > maxCountOfTunnels2Allot)
+        //         {
+        //             System.Threading.Thread.Sleep (100);
+        //         }
+        //         else
+        //         {
+        //             Tunnel tunnel = CreateTunnel ();
+        //             if (tunnel != null)
+        //             {
+        //                 tunnels2Allot.Enqueue (tunnel);
+        //             }
+        //         }
+        //     }
+        // }
 
-        public static void OpenTunnelPool()
-        {
-            if (IsRunning == false)
-            {
-                Thread thread2KeepTunnelPool = new Thread(KeepTunnelPool)
-                {
-                    IsBackground = true
-                };
-                IsRunning = true;
-                thread2KeepTunnelPool.Start();
-            }
-        }
+        // public static void OpenTunnelPool ()
+        // {
+        //     if (IsRunning == false)
+        //     {
+        //         Thread thread2KeepTunnelPool = new Thread (KeepTunnelPool)
+        //         {
+        //         IsBackground = true
+        //         };
+        //         IsRunning = true;
+        //         thread2KeepTunnelPool.Start ();
+        //     }
+        // }
 
-        public static void CloseTunnelPool()
+        public static void CloseTunnelPool ()
         {
             IsRunning = false;
         }
 
-        private static Tunnel CreateTunnel()
+        private static bool CreateTunnel (out Tunnel tunnel)
         {
-            Tunnel result = null;
-            Socket socket2Server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            IPEndPoint ipeOfServer = Conf.GetRemoteIPEndPoint();
-            if (ipeOfServer != null)
+            bool succeed = false;
+            Socket socket2Server = new Socket (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            IPEndPoint ipeOfServer = Conf.GetRemoteIPEndPoint ();
+            try
             {
-                try
+                socket2Server.Connect (ipeOfServer);
+            }
+            catch { socket2Server = null; }
+            Tunnel result = TunnelPool.Get (null, socket2Server, Conf.encryptionKey);
+            if (CheckVersion (result))
+            {
+                result.EncryptR = true;
+                if (CheckUser (result))
                 {
-                    socket2Server.Connect(ipeOfServer);
-                }
-                catch { socket2Server = null; }
-                if (socket2Server != null)
-                {
-                    Tunnel tunnel = CheckVersion(socket2Server);
-                    if (CheckUser(tunnel))
-                    {
-                        result = tunnel;
-                    }
-                    else
-                    {
-                        try
-                        {
-                            socket2Server.Shutdown(SocketShutdown.Both);
-                        }
-                        catch (SocketException) {; }
-                        System.Threading.Thread.Sleep(10);
-                        socket2Server.Close();
-                    }
+                    succeed = true;
                 }
             }
-            return result;
+            if (succeed)
+            {
+                tunnel = result;
+            }
+            else
+            {
+                result.Close ();
+                tunnel = null;
+            }
+            return succeed;
         }
 
-        public static Tunnel Handle(EagleTunnelHandler.EagleTunnelRequestType type, EagleTunnelArgs e)
+        public static Tunnel Handle (EagleTunnelHandler.EagleTunnelRequestType type, EagleTunnelArgs e)
         {
             Tunnel result = null;
             if (e != null)
@@ -116,13 +113,13 @@ namespace eagle.tunnel.dotnet.core
                 switch (type)
                 {
                     case EagleTunnelHandler.EagleTunnelRequestType.DNS:
-                        SendDNSReq(e);
+                        SendDNSReq (e);
                         break;
                     case EagleTunnelHandler.EagleTunnelRequestType.TCP:
-                        SendTCPReq(out result, e);
+                        SendTCPReq (out result, e);
                         break;
                     case EagleTunnelHandler.EagleTunnelRequestType.LOCATION:
-                        SendLOCATIONReq(e);
+                        SendLOCATIONReq (e);
                         break;
                     case EagleTunnelHandler.EagleTunnelRequestType.Unknown:
                     default:
@@ -132,11 +129,11 @@ namespace eagle.tunnel.dotnet.core
             return result;
         }
 
-        private static void SendLOCATIONReq(EagleTunnelArgs e)
+        private static void SendLOCATIONReq (EagleTunnelArgs e)
         {
-            string ip2Resolv = e.IP.ToString();
+            string ip2Resolv = e.IP.ToString ();
             // local cache resolv firstly
-            if (EagleTunnelHandler.insideCache.ContainsKey(ip2Resolv))
+            if (EagleTunnelHandler.insideCache.ContainsKey (ip2Resolv))
             {
                 e.EnableProxy = !EagleTunnelHandler.insideCache[ip2Resolv];
                 e.Success = true;
@@ -144,81 +141,68 @@ namespace eagle.tunnel.dotnet.core
             else
             {
                 // req remote
-                if (CheckIfInsideByRemote(ip2Resolv, out bool inside))
+                if (CheckIfInsideByRemote (ip2Resolv, out bool inside))
                 {
                     e.EnableProxy = !inside;
                     e.Success = true;
                 }
                 else
                 {
-                    EagleTunnelHandler.ips2Resolv.Enqueue(ip2Resolv);
+                    EagleTunnelHandler.ips2Resolv.Enqueue (ip2Resolv);
                 }
             }
         }
 
-        private static bool CheckIfInsideByRemote(string ip2Resolv, out bool inside)
+        private static bool CheckIfInsideByRemote (string ip2Resolv, out bool inside)
         {
             bool result = false;
             inside = false;
             // Tunnel tunnel2Remote = NewTunnel2Remote ();
-            Tunnel tunnel2Remote = CreateTunnel();
-            if (tunnel2Remote != null)
+            if (CreateTunnel (out Tunnel tunnel2Remote))
             {
-                if (tunnel2Remote.WriteR("LOCATION " + ip2Resolv))
+                if (tunnel2Remote.WriteR ("LOCATION " + ip2Resolv))
                 {
-                    string reply = tunnel2Remote.ReadStringR();
-                    if (!string.IsNullOrEmpty(reply))
+                    string reply = tunnel2Remote.ReadStringR ();
+                    if (!string.IsNullOrEmpty (reply))
                     {
-                        if (bool.TryParse(reply, out inside))
+                        if (bool.TryParse (reply, out inside))
                         {
                             result = true;
                         }
                     }
                 }
-                tunnel2Remote.Close();
+                tunnel2Remote.Close ();
             }
             return result;
         }
 
-        private static Tunnel CheckVersion(Socket socket2Server)
+        private static bool CheckVersion (Tunnel tunnel)
         {
-            Tunnel result = null;
-            if (socket2Server != null)
+            bool isValid = false;
+            string req = "eagle_tunnel " + Server.ProtocolVersion + " simple";
+            if (tunnel.WriteR (req, Encoding.ASCII))
             {
-                string req = "eagle_tunnel " + Server.ProtocolVersion + " simple";
-                ByteBuffer buffer = ByteBufferPool.Get();
-                buffer.Set(req, Encoding.ASCII);
-                int written = buffer.Send(socket2Server);
-                if (written > 0)
+                string reply = tunnel.ReadStringR ();
+                if (!string.IsNullOrEmpty (reply))
                 {
-                    buffer.Receive(socket2Server);
-                    if (buffer.Length > 0)
-                    {
-                        string reply = buffer.ToString();
-                        if (reply == "valid valid valid")
-                        {
-                            result = TunnelPool.Get(null, socket2Server, Conf.encryptionKey);
-                            result.EncryptR = true;
-                        }
-                    }
+                    isValid = reply == "valid valid valid";
                 }
-                buffer.Using = false;
             }
-            return result;
+            return isValid;
         }
 
-        private static bool CheckUser(Tunnel tunnel)
+        private static bool CheckUser (Tunnel tunnel)
         {
             bool result = false;
             if (tunnel != null)
             {
                 if (Conf.LocalUser != null)
                 {
-                    bool done = tunnel.WriteR(Conf.LocalUser.ToString());
+                    bool done = tunnel.WriteR (Conf.LocalUser.ToString ());
                     if (done)
                     {
-                        string reply = tunnel.ReadStringR();
-                        if (!string.IsNullOrEmpty(reply))
+                        string reply = tunnel.ReadStringR ();
+                        if (!string.IsNullOrEmpty (reply))
                         {
                             result = reply == "valid";
                         }
@@ -232,20 +216,20 @@ namespace eagle.tunnel.dotnet.core
             return result;
         }
 
-        private static void SendDNSReq(EagleTunnelArgs e)
+        private static void SendDNSReq (EagleTunnelArgs e)
         {
             if (e != null)
             {
                 if (e.Domain != null)
                 {
-                    if (Conf.hosts.ContainsKey(e.Domain))
+                    if (Conf.hosts.ContainsKey (e.Domain))
                     {
                         e.IP = Conf.hosts[e.Domain];
                         e.Success = true;
                     }
                     else
                     {
-                        if (dnsCaches.ContainsKey(e.Domain))
+                        if (dnsCaches.ContainsKey (e.Domain))
                         {
                             if (!dnsCaches[e.Domain].IsDead)
                             {
@@ -254,7 +238,7 @@ namespace eagle.tunnel.dotnet.core
                             }
                             else
                             {
-                                e.IP = ResolvDomain(e);
+                                e.IP = ResolvDomain (e);
                                 if (e.IP != null)
                                 {
                                     dnsCaches[e.Domain].IP = e.IP;
@@ -264,11 +248,11 @@ namespace eagle.tunnel.dotnet.core
                         }
                         else
                         {
-                            e.IP = ResolvDomain(e);
+                            e.IP = ResolvDomain (e);
                             if (e.IP != null)
                             {
-                                DnsCache cache = new DnsCache(e.Domain, e.IP, Conf.DnsCacheTtl);
-                                dnsCaches.TryAdd(e.Domain, cache);
+                                DnsCache cache = new DnsCache (e.Domain, e.IP, Conf.DnsCacheTtl);
+                                dnsCaches.TryAdd (e.Domain, cache);
                                 e.Success = true;
                             }
                         }
@@ -277,57 +261,56 @@ namespace eagle.tunnel.dotnet.core
             }
         }
 
-        private static IPAddress ResolvDomain(EagleTunnelArgs e)
+        private static IPAddress ResolvDomain (EagleTunnelArgs e)
         {
             IPAddress result = null;
             if (e.EnableProxy)
             {
-                result = ResolvByProxy(e.Domain);
+                result = ResolvByProxy (e.Domain);
             }
             else
             {
-                result = ResolvByLocal(e.Domain);
+                result = ResolvByLocal (e.Domain);
                 if (result == null)
                 {
-                    result = ResolvByProxy(e.Domain);
+                    result = ResolvByProxy (e.Domain);
                 }
             }
             return result;
         }
 
-        private static IPAddress ResolvByProxy(string domain)
+        private static IPAddress ResolvByProxy (string domain)
         {
             IPAddress result = null;
             // Tunnel tunnel = NewTunnel2Remote ();
-            Tunnel tunnel = CreateTunnel();
-            if (tunnel != null)
+            if (CreateTunnel (out Tunnel tunnel))
             {
-                string req = EagleTunnelHandler.EagleTunnelRequestType.DNS.ToString();
+                string req = EagleTunnelHandler.EagleTunnelRequestType.DNS.ToString ();
                 req += " " + domain;
-                bool done = tunnel.WriteR(req);
+                bool done = tunnel.WriteR (req);
                 if (done)
                 {
-                    string reply = tunnel.ReadStringR();
-                    if (!string.IsNullOrEmpty(reply) && reply != "nok")
+                    string reply = tunnel.ReadStringR ();
+                    if (!string.IsNullOrEmpty (reply) && reply != "nok")
                     {
-                        if (IPAddress.TryParse(reply, out IPAddress ip))
+                        if (IPAddress.TryParse (reply, out IPAddress ip))
                         {
                             result = ip;
                         }
                     }
                 }
-                tunnel.Close();
+                tunnel.Close ();
             }
             return result;
         }
 
-        private static IPAddress ResolvByLocal(string domain)
+        private static IPAddress ResolvByLocal (string domain)
         {
             IPAddress result = null;
             IPHostEntry iphe;
             try
             {
-                iphe = Dns.GetHostEntry(domain);
+                iphe = Dns.GetHostEntry (domain);
             }
             catch { iphe = null; }
             if (iphe != null)
@@ -344,61 +327,66 @@ namespace eagle.tunnel.dotnet.core
             return result;
         }
 
-        private static void SendTCPReq(out Tunnel tunnel, EagleTunnelArgs e)
+        private static void SendTCPReq (out Tunnel tunnel, EagleTunnelArgs e)
         {
             tunnel = null;
             if (e != null && e.EndPoint != null)
             {
                 if (e.EnableProxy)
                 {
-                    ConnectByProxy(out tunnel, e);
+                    ConnectByProxy (out tunnel, e);
                 }
                 else
                 {
-                    DirectConnect(out tunnel, e);
+                    DirectConnect (out tunnel, e);
                 }
             }
         }
 
-        private static void ConnectByProxy(out Tunnel tunnel, EagleTunnelArgs e)
+        private static void ConnectByProxy (out Tunnel tunnel, EagleTunnelArgs e)
         {
             // tunnel = NewTunnel2Remote ();
-            tunnel = CreateTunnel();
-            if (tunnel != null)
+            bool succeed = false;
+            if (CreateTunnel (out Tunnel tmpTunnel))
             {
-                string req = EagleTunnelHandler.EagleTunnelRequestType.TCP.ToString();
-                req += ' ' + e.EndPoint.Address.ToString();
-                req += ' ' + e.EndPoint.Port.ToString();
-                bool done = tunnel.WriteR(req);
+                string req = EagleTunnelHandler.EagleTunnelRequestType.TCP.ToString ();
+                req += ' ' + e.EndPoint.Address.ToString ();
+                req += ' ' + e.EndPoint.Port.ToString ();
+                bool done = tmpTunnel.WriteR (req);
                 if (done)
                 {
-                    string reply = tunnel.ReadStringR();
-                    if (reply != "ok")
-                    {
-                        tunnel.Close();
-                        tunnel = null;
-                    }
+                    string reply = tmpTunnel.ReadStringR ();
+                    succeed = reply == "ok";
                 }
+            }
+            if (succeed)
+            {
+                tunnel = tmpTunnel;
+            }
+            else
+            {
+                tmpTunnel.Close ();
+                tunnel = null;
             }
         }
 
-        private static void DirectConnect(out Tunnel tunnel, EagleTunnelArgs e)
+        private static void DirectConnect (out Tunnel tunnel, EagleTunnelArgs e)
         {
             tunnel = null;
-            Socket socket2Server = new Socket(AddressFamily.InterNetwork,
+            Socket socket2Server = new Socket (AddressFamily.InterNetwork,
                 SocketType.Stream,
                 ProtocolType.Tcp);
             try
             {
-                socket2Server.Connect(e.EndPoint);
+                socket2Server.Connect (e.EndPoint);
             }
             catch (SocketException)
             {
-                socket2Server.Close();
+                socket2Server.Close ();
             }
             if (socket2Server.Connected)
             {
-                tunnel = TunnelPool.Get(null, socket2Server, Conf.encryptionKey);
+                tunnel = TunnelPool.Get (null, socket2Server, Conf.encryptionKey);
             }
         }
     }

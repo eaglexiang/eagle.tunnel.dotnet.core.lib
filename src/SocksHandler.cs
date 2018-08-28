@@ -2,29 +2,38 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
-namespace eagle.tunnel.dotnet.core {
-    public class SocksHandler {
-        public enum SOCKS5_CMDType {
+namespace eagle.tunnel.dotnet.core
+{
+    public class SocksHandler
+    {
+        public enum SOCKS5_CMDType
+        {
             ERROR,
             Connect,
             Bind,
             Udp
         }
 
-        public static bool Handle (ByteBuffer request, Tunnel tunnel) {
+        public static bool Handle (ByteBuffer request, Tunnel tunnel)
+        {
             bool result = false;
-            if (request != null && tunnel != null) {
+            if (request != null && tunnel != null)
+            {
                 int version = request[0];
                 // check if is socks version 5
-                if (version == '\u0005') {
+                if (version == '\u0005')
+                {
                     string reply = "\u0005\u0000";
                     result = tunnel.WriteL (reply);
-                    if (result) {
-                        ByteBuffer buffer = ByteBufferPool.Get();
+                    if (result)
+                    {
+                        ByteBuffer buffer = ByteBufferPool.Get ();
                         int read = tunnel.ReadL (buffer);
-                        if (read >= 2) {
+                        if (read >= 2)
+                        {
                             SOCKS5_CMDType cmdType = (SOCKS5_CMDType) buffer[1];
-                            switch (cmdType) {
+                            switch (cmdType)
+                            {
                                 case SOCKS5_CMDType.Connect:
                                     result = HandleTCPReq (buffer, tunnel);
                                     break;
@@ -37,63 +46,78 @@ namespace eagle.tunnel.dotnet.core {
             return result;
         }
 
-        private static bool HandleTCPReq (ByteBuffer request, Tunnel tunnel) {
+        private static bool HandleTCPReq (ByteBuffer request, Tunnel tunnel)
+        {
             bool result = false;
-            if (request != null && tunnel != null) {
+            if (request != null && tunnel != null)
+            {
                 IPAddress ip = GetIP (request);
                 int port = GetPort (request);
-                if (ip != null && port != 0) {
+                if (ip != null && port != 0)
+                {
                     IPEndPoint reqIPEP = new IPEndPoint (ip, port);
                     string reply;
                     EagleTunnelArgs e = new EagleTunnelArgs ();
                     e.EndPoint = reqIPEP;
                     Tunnel tmpTunnel = EagleTunnelSender.Handle (
                         EagleTunnelHandler.EagleTunnelRequestType.TCP, e);
-                    if (tmpTunnel != null) {
+                    if (tmpTunnel != null)
+                    {
                         tunnel.SocketR = tmpTunnel.SocketR;
                         tunnel.EncryptR = tmpTunnel.EncryptR;
-                        if(Conf.LocalUser!=null){
-                            Conf.LocalUser.AddTunnel(tunnel);
+                        tmpTunnel.Release ();
+                        if (Conf.LocalUser != null)
+                        {
+                            Conf.LocalUser.AddTunnel (tunnel);
                         }
-                        if (tmpTunnel != null) {
-                            reply = "\u0005\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000";
-                        } else {
-                            reply = "\u0005\u0001\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000";
-                        }
-                        result = tunnel.WriteL (reply);
+                        reply = "\u0005\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000";
                     }
+                    else
+                    {
+                        reply = "\u0005\u0001\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000";
+                    }
+                    result = tunnel.WriteL (reply);
                 }
             }
             return result;
         }
 
-        public static IPAddress GetIP (ByteBuffer request) {
+        public static IPAddress GetIP (ByteBuffer request)
+        {
             IPAddress ip;
             int destype = request[3];
             string ip_str;
-            switch (destype) {
+            switch (destype)
+            {
                 case 1:
                     ip_str = request[4].ToString ();
                     ip_str += '.' + request[5].ToString ();
                     ip_str += '.' + request[6].ToString ();
                     ip_str += '.' + request[7].ToString ();
-                    if (IPAddress.TryParse (ip_str, out IPAddress ipa0)) {
+                    if (IPAddress.TryParse (ip_str, out IPAddress ipa0))
+                    {
                         ip = ipa0;
-                    } else {
+                    }
+                    else
+                    {
                         ip = null;
                     }
                     break;
                 case 3:
                     int len = request[4];
                     char[] hostChars = new char[len];
-                    for (int i = 0; i < len; ++i) {
+                    for (int i = 0; i < len; ++i)
+                    {
                         hostChars[i] = (char) request[5 + i];
                     }
                     string host = new string (hostChars);
                     // if host is real ip but not domain name
-                    if (IPAddress.TryParse (host, out IPAddress ipa)) {
+                    if (IPAddress.TryParse (host, out IPAddress ipa))
+                    {
                         ip = ipa;
-                    } else {
+                    }
+                    else
+                    {
                         EagleTunnelArgs e = new EagleTunnelArgs ();
                         e.Domain = host;
                         EagleTunnelSender.Handle (
@@ -108,13 +132,16 @@ namespace eagle.tunnel.dotnet.core {
             return ip;
         }
 
-        public static int GetPort (ByteBuffer request) {
-            try {
+        public static int GetPort (ByteBuffer request)
+        {
+            try
+            {
                 int destype = request[3];
                 int port;
                 int high;
                 int low;
-                switch (destype) {
+                switch (destype)
+                {
                     case 1:
                         high = request[8];
                         low = request[9];
@@ -131,7 +158,9 @@ namespace eagle.tunnel.dotnet.core {
                         break;
                 }
                 return port;
-            } catch {
+            }
+            catch
+            {
                 return 0;
             }
         }

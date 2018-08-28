@@ -51,7 +51,7 @@ namespace eagle.tunnel.dotnet.core
         public bool IsRunning { get; private set; }
         public object IsWaiting { get; set; }
 
-        public Pipe(Socket from = null, Socket to = null, string user = null, byte encryptionKey = 0)
+        public Pipe (Socket from = null, Socket to = null, string user = null, byte encryptionKey = 0)
         {
             SocketFrom = from;
             SocketTo = to;
@@ -60,12 +60,12 @@ namespace eagle.tunnel.dotnet.core
 
             UserFrom = user;
             BytesTransferred = 0;
-            bufferRead = new ByteBuffer();
+            bufferRead = new ByteBuffer ();
             IsRunning = false;
             EncryptionKey = encryptionKey;
         }
 
-        public void Restore(Socket from = null, Socket to = null, string user = null, byte encryptionKey = 0)
+        public void Restore (Socket from = null, Socket to = null, string user = null, byte encryptionKey = 0)
         {
             SocketFrom = from;
             SocketTo = to;
@@ -78,144 +78,132 @@ namespace eagle.tunnel.dotnet.core
             EncryptionKey = encryptionKey;
         }
 
-        public int Write(ByteBuffer buffer)
-        {
-            return Write(buffer.array, 0, buffer.Length);
+        public void Release(){
+            Restore();
         }
 
-        public int Write(byte[] buffer, int offset, int count)
+        public int Write (ByteBuffer buffer)
         {
-            int result = -1;
-            if (buffer != null)
+            int result = 0;
+            if (EncryptTo)
             {
-                ByteBuffer tmpBuffer = ByteBufferPool.Get();
-                tmpBuffer.Set(buffer, offset, count);
-                if (EncryptTo)
-                {
-                    Encrypt(tmpBuffer);
-                }
-                if (SocketTo != null && SocketTo.Connected)
-                {
-                    result = tmpBuffer.Send(SocketTo);
-                }
-                tmpBuffer.Using = false;
+                Encrypt (buffer);
+            }
+            if (SocketTo != null && SocketTo.Connected)
+            {
+                result = buffer.Send (SocketTo);
             }
             return result;
         }
 
-        public int Write(byte[] buffer)
-        {
-            return Write(buffer, 0, buffer.Length);
-        }
-
-        public int Write(string msg)
+        public int Write (string msg, Encoding code)
         {
             int result = -1;
-            if (!string.IsNullOrEmpty(msg))
+            if (!string.IsNullOrEmpty (msg))
             {
-                ByteBuffer buffer = ByteBufferPool.Get();
-                buffer.Set(msg);
-                result = Write(buffer);
+                ByteBuffer buffer = ByteBufferPool.Get ();
+                buffer.Set (msg, code);
+                result = Write (buffer);
                 buffer.Using = false;
             }
             return result;
         }
 
-        public string ReadString()
+        public string ReadString ()
         {
             string result = "";
-            ByteBuffer buffer = ByteBufferPool.Get();
-            ReadByte(buffer);
+            ByteBuffer buffer = ByteBufferPool.Get ();
+            ReadByte (buffer);
             if (buffer.Length > 0)
             {
-                result = buffer.ToString();
+                result = buffer.ToString ();
             }
             buffer.Using = false;
             return result;
         }
 
-        public int ReadByte(ByteBuffer buffer)
+        public int ReadByte (ByteBuffer buffer)
         {
             if (SocketFrom != null && SocketFrom.Connected)
             {
-                int count = bufferRead.Receive(SocketFrom);
+                int count = bufferRead.Receive (SocketFrom);
                 if (count > 0)
                 {
                     if (EncryptFrom)
                     {
-                        Decrypt(bufferRead);
+                        Decrypt (bufferRead);
 
                     }
-                    buffer.Set(bufferRead);
+                    buffer.Set (bufferRead);
                     BytesTransferred += buffer.Length;
-                    Wait();
+                    Wait ();
                 }
             }
             return buffer.Length;
         }
 
         // wait for speed limit
-        private void Wait()
+        private void Wait ()
         {
             if (IsWaiting != null)
             {
-                bool IsWaiting = (bool)this.IsWaiting;
+                bool IsWaiting = (bool) this.IsWaiting;
                 while (IsWaiting)
                 {
-                    Thread.Sleep(1000);
+                    Thread.Sleep (1000);
                 }
             }
         }
 
-        public void Flow()
+        public void Flow ()
         {
             if (!IsRunning)
             {
                 IsRunning = true;
-                Task taskFlow = new Task(() => _Flow());
-                taskFlow.Start();
+                Task taskFlow = new Task (() => _Flow ());
+                taskFlow.Start ();
             }
         }
 
-        private void _Flow()
+        private void _Flow ()
         {
+            ByteBuffer buffer = ByteBufferPool.Get ();
             while (IsRunning)
             {
-                ByteBuffer buffer = ByteBufferPool.Get();
-                ReadByte(buffer);
+                ReadByte (buffer);
                 if (buffer.Length > 0)
                 {
-                    int written = Write(buffer);
+                    int written = Write (buffer);
                     if (written <= 0)
                     {
-                        Close();
+                        Close ();
                     }
                 }
                 else
                 {
-                    Close();
+                    Close ();
                 }
-                buffer.Using = false;
             }
+            buffer.Using = false;
         }
 
-        public void Encrypt(ByteBuffer src)
+        public void Encrypt (ByteBuffer src)
         {
             for (int i = 0; i < src.Length; ++i)
             {
-                src[i] = (byte)(src[i] ^ EncryptionKey);
+                src[i] = (byte) (src[i] ^ EncryptionKey);
             }
         }
 
-        public void Decrypt(ByteBuffer src)
+        public void Decrypt (ByteBuffer src)
         {
             for (int i = 0; i < src.Length; ++i)
             {
-                src[i] = (byte)(src[i] ^ EncryptionKey);
+                src[i] = (byte) (src[i] ^ EncryptionKey);
             }
         }
 
-        public void Close()
+        public void Close ()
         {
             IsRunning = false;
 
@@ -225,9 +213,13 @@ namespace eagle.tunnel.dotnet.core
                 {
                     try
                     {
-                        SocketFrom.Shutdown(SocketShutdown.Both);
-                        Thread.Sleep(10);
-                        SocketFrom.Close();
+                        SocketFrom.Shutdown (SocketShutdown.Both);
+                    }
+                    catch {; }
+                    Thread.Sleep (10);
+                    try
+                    {
+                        SocketFrom.Close ();
                     }
                     catch {; }
                 }
@@ -238,9 +230,13 @@ namespace eagle.tunnel.dotnet.core
                 {
                     try
                     {
-                        SocketTo.Shutdown(SocketShutdown.Both);
-                        Thread.Sleep(10);
-                        SocketTo.Close();
+                        SocketTo.Shutdown (SocketShutdown.Both);
+                    }
+                    catch {; }
+                    Thread.Sleep (10);
+                    try
+                    {
+                        SocketTo.Close ();
                     }
                     catch {; }
                 }

@@ -21,6 +21,7 @@ namespace eagle.tunnel.dotnet.core
                     {
                         tunnel.SocketR = tmpTunnel.SocketR;
                         tunnel.EncryptR = tmpTunnel.EncryptR;
+                        tmpTunnel.Release();
                         if (Conf.LocalUser != null)
                         {
                             Conf.LocalUser.AddTunnel(tunnel);
