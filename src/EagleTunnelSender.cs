@@ -87,6 +87,7 @@ namespace eagle.tunnel.dotnet.core
                 if (CheckIfInsideByRemote (ip2Resolv, out bool inside))
                 {
                     e.EnableProxy = !inside;
+                    EagleTunnelHandler.insideCache.TryAdd (ip2Resolv, inside);
                     e.Success = true;
                 }
                 else

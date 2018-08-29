@@ -1,6 +1,6 @@
 using System;
-using System.Net;
 using System.Collections.Generic;
+using System.Net;
 
 namespace eagle.tunnel.dotnet.core
 {
@@ -23,26 +23,26 @@ namespace eagle.tunnel.dotnet.core
         public string Host { get; set; }
         public int Port { get; set; }
 
-        private HTTPReqArgs()
+        private HTTPReqArgs ()
         {
             Host = "";
             Port = 0;
         }
 
-        public static bool TryParse(string request, out HTTPReqArgs e)
+        public static bool TryParse (string request, out HTTPReqArgs e)
         {
             bool result = false;
-            e = new HTTPReqArgs();
+            e = new HTTPReqArgs ();
             if (request != null)
             {
-                string[] args = request.Split(' ');
+                string[] args = request.Split (' ');
                 if (args.Length >= 2)
                 {
-                    if (Enum.TryParse(args[0], out HTTPRequestType type))
+                    if (Enum.TryParse (args[0], out HTTPRequestType type))
                     {
-                        string host = GetHost(request);
-                        int port = GetPort(request);
-                        if (!string.IsNullOrEmpty(host) && port != 0)
+                        string host = GetHost (request);
+                        int port = GetPort (request);
+                        if (!string.IsNullOrEmpty (host) && port != 0)
                         {
                             e.HTTP_Request_Type = type;
                             e.Host = host;
@@ -55,61 +55,58 @@ namespace eagle.tunnel.dotnet.core
             return result;
         }
 
-        public static string CreateNewRequest(string oldRequest)
+        public static string CreateNewRequest (string oldRequest)
         {
             string newReq = "";
-            if (!string.IsNullOrEmpty(oldRequest))
+            if (!string.IsNullOrEmpty (oldRequest))
             {
-                string[] lines = oldRequest.Split("\r\n");
+                string[] lines = oldRequest.Split ("\r\n");
                 string firstline = lines[0];
-                string[] argsOfFirstLine = firstline.Split(' ');
+                string[] argsOfFirstLine = firstline.Split (' ');
                 if (argsOfFirstLine.Length == 3)
                 {
-                    Uri des = new Uri(argsOfFirstLine[1]);
+                    Uri des = new Uri (argsOfFirstLine[1]);
                     string path = des.AbsolutePath + des.Query;
                     argsOfFirstLine[1] = path;
                     string newFirstLine = argsOfFirstLine[0] + ' ' +
                         argsOfFirstLine[1] + ' ' +
                         argsOfFirstLine[2] + "\r\n";
 
-                    List<string> linesList = new List<string>(lines);
-                    linesList.RemoveAt(0);
-                    Dictionary<string, string> keyValues = GetKeyValues(linesList);
-                    if (keyValues.TryGetValue("Proxy-Connection", out string connection))
+                    List<string> linesList = new List<string> (lines);
+                    linesList.RemoveAt (0);
+                    Dictionary<string, string> keyValues = GetKeyValues (linesList);
+                    if (keyValues.TryGetValue ("Proxy-Connection", out string connection))
                     {
-                        keyValues.Remove("Proxy-Connection");
-                        keyValues.TryAdd("Connection", connection);
+                        keyValues.Remove ("Proxy-Connection");
+                        keyValues.TryAdd ("Connection", connection);
                     }
-                    string[] restLines = Array.FindAll(linesList.ToArray(),
-                    line => !line.Contains(':'));
-                    string rest = ExportKeyValues(keyValues);
-                    newReq = newFirstLine + rest + "\r\n";
-                    foreach (string line in restLines)
+                    linesList.RemoveRange (0, keyValues.Count + 1);
+                    string rest = ExportKeyValues (keyValues);
+                    newReq = newFirstLine + rest;
+                    foreach (string line in linesList)
                     {
-                        if(!string.IsNullOrEmpty(line)){
-                            newReq += line + "\r\n";
-                        }
+                        newReq += "\r\n" + line;
                     }
                 }
             }
             return newReq;
         }
 
-        private static Dictionary<string, string> GetKeyValues(List<string> src)
+        private static Dictionary<string, string> GetKeyValues (List<string> src)
         {
-            Dictionary<string, string> keyValues = new Dictionary<string, string>();
+            Dictionary<string, string> keyValues = new Dictionary<string, string> ();
             foreach (string line in src)
             {
-                string[] keyValue = line.Split(':');
+                string[] keyValue = line.Split (':');
                 if (keyValue.Length == 2)
                 {
-                    keyValues.TryAdd(keyValue[0].Trim(), keyValue[1].Trim());
+                    keyValues.TryAdd (keyValue[0].Trim (), keyValue[1].Trim ());
                 }
             }
             return keyValues;
         }
 
-        private static string ExportKeyValues(Dictionary<string, string> keyValues)
+        private static string ExportKeyValues (Dictionary<string, string> keyValues)
         {
             string result = "";
             if (keyValues != null)
@@ -145,7 +142,7 @@ namespace eagle.tunnel.dotnet.core
         //     return newReq;
         // }
 
-        public static IPEndPoint GetIPEndPoint(HTTPReqArgs e0)
+        public static IPEndPoint GetIPEndPoint (HTTPReqArgs e0)
         {
             IPEndPoint result = null;
             if (e0 != null)
@@ -153,32 +150,32 @@ namespace eagle.tunnel.dotnet.core
                 if (e0.Host != null & e0.Port != 0)
                 {
                     // resolv ip of domain name by EagleTunnel Sender
-                    EagleTunnelArgs e1 = new EagleTunnelArgs();
+                    EagleTunnelArgs e1 = new EagleTunnelArgs ();
                     e1.Domain = e0.Host;
-                    EagleTunnelSender.Handle(
+                    EagleTunnelSender.Handle (
                         EagleTunnelHandler.EagleTunnelRequestType.DNS, e1);
                     if (e1.IP != null)
                     {
                         // resolv successfully
-                        result = new IPEndPoint(e1.IP, e0.Port);
+                        result = new IPEndPoint (e1.IP, e0.Port);
                     }
                 }
             }
             return result;
         }
 
-        private static string GetURI(string request)
+        private static string GetURI (string request)
         {
             if (request != null)
             {
-                string line = request.Split('\n')[0];
-                int ind0 = line.IndexOf(' ');
-                int ind1 = line.LastIndexOf(' ');
+                string line = request.Split ('\n') [0];
+                int ind0 = line.IndexOf (' ');
+                int ind1 = line.LastIndexOf (' ');
                 if (ind0 == ind1)
                 {
                     ind1 = line.Length;
                 }
-                string uri = request.Substring(
+                string uri = request.Substring (
                     ind0 + 1, ind1 - ind0 - 1);
                 return uri;
             }
@@ -188,28 +185,28 @@ namespace eagle.tunnel.dotnet.core
             }
         }
 
-        private static bool IsNum(char c)
+        private static bool IsNum (char c)
         {
             return '0' <= c && c <= '9';
         }
 
-        private static string GetHost(string request)
+        private static string GetHost (string request)
         {
-            string uristr = GetURI(request);
+            string uristr = GetURI (request);
             string host;
             if (uristr != null)
             {
-                if (uristr.Contains(":") &&
-                    IsNum(uristr[uristr.IndexOf(":") + 1]))
+                if (uristr.Contains (":") &&
+                    IsNum (uristr[uristr.IndexOf (":") + 1]))
                 {
-                    int ind = uristr.LastIndexOf(":");
-                    host = uristr.Substring(0, ind);
+                    int ind = uristr.LastIndexOf (":");
+                    host = uristr.Substring (0, ind);
                 }
                 else
                 {
                     try
                     {
-                        Uri uri = new Uri(uristr);
+                        Uri uri = new Uri (uristr);
                         host = uri.Host;
                     }
                     catch { host = null; }
@@ -222,18 +219,18 @@ namespace eagle.tunnel.dotnet.core
             return host;
         }
 
-        private static int GetPort(string request)
+        private static int GetPort (string request)
         {
-            string uristr = GetURI(request);
+            string uristr = GetURI (request);
             int port;
             if (uristr != null)
             {
-                if (uristr.Contains(":") &&
-                    IsNum(uristr[uristr.IndexOf(":") + 1]))
+                if (uristr.Contains (":") &&
+                    IsNum (uristr[uristr.IndexOf (":") + 1]))
                 {
-                    int ind = uristr.IndexOf(":");
-                    string _port = uristr.Substring(ind + 1);
-                    if (!int.TryParse(_port, out port))
+                    int ind = uristr.IndexOf (":");
+                    string _port = uristr.Substring (ind + 1);
+                    if (!int.TryParse (_port, out port))
                     {
                         port = 0;
                     }
@@ -242,7 +239,7 @@ namespace eagle.tunnel.dotnet.core
                 {
                     try
                     {
-                        Uri uri = new Uri(uristr);
+                        Uri uri = new Uri (uristr);
                         port = uri.Port;
                     }
                     catch { port = 0; }
