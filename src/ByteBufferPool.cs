@@ -25,7 +25,7 @@ namespace eagle.tunnel.dotnet.core
             else
             {
                 result = new ByteBuffer ();
-                System.Console.WriteLine("new ByteBuffer!");
+                // System.Console.WriteLine("new ByteBuffer!");
             }
             // int countOfBufferPool = ByteBufferPool.pool.Count;
             // int countOfBufferUsed = ByteBufferPool.used.Count;
