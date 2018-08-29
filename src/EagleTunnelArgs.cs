@@ -24,7 +24,7 @@ namespace eagle.tunnel.dotnet.core
                         EnableProxy = false;
                         break;
                     case Conf.ProxyStatus.SMART:
-                        EnableProxy = CheckEnableProxy(domain);
+                        EnableProxy = CheckEnableProxy (domain);
                         break;
                     default:
                         EnableProxy = true;
@@ -53,7 +53,7 @@ namespace eagle.tunnel.dotnet.core
                             EnableProxy = false;
                             break;
                         case Conf.ProxyStatus.SMART:
-                            EnableProxy = CheckEnableProxy(endPoint.Address);
+                            EnableProxy = CheckEnableProxy (endPoint.Address);
                             break;
                         default:
                             EnableProxy = true;
@@ -63,21 +63,23 @@ namespace eagle.tunnel.dotnet.core
             }
         }
 
-        public EagleTunnelArgs()
+        public Tunnel tunnel { get; set; }
+
+        public EagleTunnelArgs ()
         {
             Success = false;
         }
 
-        private static bool CheckEnableProxy(string domain)
+        private static bool CheckEnableProxy (string domain)
         {
             bool result = false;
-            if (!string.IsNullOrEmpty(domain))
+            if (!string.IsNullOrEmpty (domain))
             {
                 foreach (string item in Conf.whitelist_domain)
                 {
-                    if (!string.IsNullOrEmpty(item))
+                    if (!string.IsNullOrEmpty (item))
                     {
-                        if (domain.EndsWith(item))
+                        if (domain.EndsWith (item))
                         {
                             result = true;
                             break;
@@ -88,14 +90,14 @@ namespace eagle.tunnel.dotnet.core
             return result;
         }
 
-        private static bool CheckEnableProxy(IPAddress ip)
+        private static bool CheckEnableProxy (IPAddress ip)
         {
             bool result = true;
             if (ip != null)
             {
-                EagleTunnelArgs e = new EagleTunnelArgs();
+                EagleTunnelArgs e = new EagleTunnelArgs ();
                 e.IP = ip;
-                EagleTunnelSender.Handle(
+                EagleTunnelSender.Handle (
                     EagleTunnelHandler.EagleTunnelRequestType.LOCATION,
                     e
                 );

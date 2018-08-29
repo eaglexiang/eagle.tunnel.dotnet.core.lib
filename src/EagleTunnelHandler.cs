@@ -17,7 +17,7 @@ namespace eagle.tunnel.dotnet.core
             Unknown
         }
 
-        private static ConcurrentDictionary<string, DnsCache> dnsCaches =
+        public static ConcurrentDictionary<string, DnsCache> dnsCaches =
             new ConcurrentDictionary<string, DnsCache>();
 
         private static bool LOCATIONHandlerIsRunning;

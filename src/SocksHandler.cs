@@ -59,13 +59,10 @@ namespace eagle.tunnel.dotnet.core
                     string reply;
                     EagleTunnelArgs e = new EagleTunnelArgs ();
                     e.EndPoint = reqIPEP;
-                    Tunnel tmpTunnel = EagleTunnelSender.Handle (
-                        EagleTunnelHandler.EagleTunnelRequestType.TCP, e);
-                    if (tmpTunnel != null)
+                    e.tunnel = tunnel;
+                    if (EagleTunnelSender.Handle (
+                        EagleTunnelHandler.EagleTunnelRequestType.TCP, e))
                     {
-                        tunnel.SocketR = tmpTunnel.SocketR;
-                        tunnel.EncryptR = tmpTunnel.EncryptR;
-                        tmpTunnel.Release ();
                         if (Conf.LocalUser != null)
                         {
                             Conf.LocalUser.AddTunnel (tunnel);

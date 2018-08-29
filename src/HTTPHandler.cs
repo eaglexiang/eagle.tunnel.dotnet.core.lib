@@ -15,13 +15,10 @@ namespace eagle.tunnel.dotnet.core
                     IPEndPoint reqEP = HTTPReqArgs.GetIPEndPoint(e0);
                     EagleTunnelArgs e1 = new EagleTunnelArgs();
                     e1.EndPoint = reqEP;
-                    Tunnel tmpTunnel = EagleTunnelSender.Handle(
-                        EagleTunnelHandler.EagleTunnelRequestType.TCP, e1);
-                    if (tmpTunnel != null)
+                    e1.tunnel = tunnel;
+                    if (EagleTunnelSender.Handle(
+                        EagleTunnelHandler.EagleTunnelRequestType.TCP, e1))
                     {
-                        tunnel.SocketR = tmpTunnel.SocketR;
-                        tunnel.EncryptR = tmpTunnel.EncryptR;
-                        tmpTunnel.Release();
                         if (Conf.LocalUser != null)
                         {
                             Conf.LocalUser.AddTunnel(tunnel);
