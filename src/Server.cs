@@ -10,7 +10,7 @@ namespace eagle.tunnel.dotnet.core
 {
     public class Server
     {
-        public static string Version { get; } = "1.17.0";
+        public static string Version { get; } = "1.17.2";
         public static string ProtocolVersion { get; } = "1.1";
         private static Socket[] servers;
         private static IPEndPoint[] localAddresses;
@@ -45,31 +45,22 @@ namespace eagle.tunnel.dotnet.core
             }
         }
 
-        public static void StartAsync(IPEndPoint[] localAddresses)
+        public static void StartAsync (IPEndPoint[] localAddresses)
         {
-            Task taskStart = new Task(() => Start(localAddresses));
-            taskStart.Start();
+            Task taskStart = new Task (() => Start (localAddresses));
+            taskStart.Start ();
         }
 
-        public static void Start(IPEndPoint[] localAddresses)
+        public static void Start (IPEndPoint[] localAddresses)
         {
             if (!IsRunning)
             {
                 if (localAddresses != null)
                 {
-                    if (Conf.allConf.ContainsKey("proxy-status"))
+                    if (Conf.Status == Conf.ProxyStatus.SMART ||
+                        Conf.EnableEagleTunnel)
                     {
-                        if (Conf.allConf["proxy-status"][0] == "smart")
-                        {
-                            EagleTunnelHandler.StartResolvInside();
-                        }
-                    }
-                    if (Conf.allConf.ContainsKey("et"))
-                    {
-                        if (Conf.allConf["et"][0] == "on")
-                        {
-                            EagleTunnelHandler.StartResolvInside();
-                        }
+                        EagleTunnelHandler.StartResolvInside ();
                     }
                     // if (Conf.allConf.ContainsKey ("http")) {
                     //     if (Conf.allConf["http"][0] == "on") {
@@ -81,105 +72,105 @@ namespace eagle.tunnel.dotnet.core
                     //         EagleTunnelSender.OpenTunnelPool ();
                     //     }
                     // }
-                    TunnelPool.StartCheck();
-                    ByteBufferPool.StartCheck();
+                    TunnelPool.StartCheck ();
+                    ByteBufferPool.StartCheck ();
 
                     servers = new Socket[localAddresses.Length];
-                    reqGotNumbers = new ConCurrentCounter(100);
+                    reqGotNumbers = new ConCurrentCounter (100);
                     Server.localAddresses = localAddresses;
                     IsRunning = true;
 
                     if (threadLimitCheck == null)
                     {
-                        threadLimitCheck = new Thread(LimitSpeed);
+                        threadLimitCheck = new Thread (LimitSpeed);
                         threadLimitCheck.IsBackground = true;
-                        threadLimitCheck.Start();
+                        threadLimitCheck.Start ();
                     }
 
                     for (int i = 1; i < localAddresses.Length; ++i)
                     {
-                        ListenAsync(i);
+                        ListenAsync (i);
                     }
-                    Listen(0);
+                    Listen (0);
                 }
             }
         }
 
-        private static Socket CreateServer(IPEndPoint ipep)
+        private static Socket CreateServer (IPEndPoint ipep)
         {
             Socket server = null;
             if (ipep != null)
             {
-                server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                server = new Socket (AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 bool firstTime = true;
                 do
                 {
                     try
                     {
-                        server.Bind(ipep);
+                        server.Bind (ipep);
                     }
                     catch (SocketException se)
                     {
                         if (firstTime)
                         {
-                            Console.WriteLine("warning: bind {0} -> {1}", ipep.ToString(), se.Message);
-                            Console.WriteLine("retrying...");
+                            Console.WriteLine ("warning: bind {0} -> {1}", ipep.ToString (), se.Message);
+                            Console.WriteLine ("retrying...");
                             firstTime = false;
                         }
-                        Thread.Sleep(20000); // wait for 20s to retry.
+                        Thread.Sleep (20000); // wait for 20s to retry.
                     }
                 } while (!server.IsBound && IsRunning);
             }
             return server;
         }
 
-        private static void ListenAsync(int ipepIndex)
+        private static void ListenAsync (int ipepIndex)
         {
-            Thread thread = new Thread(() => Listen(ipepIndex));
+            Thread thread = new Thread (() => Listen (ipepIndex));
             thread.IsBackground = true;
-            thread.Start();
+            thread.Start ();
         }
 
-        private static void Listen(int ipepIndex)
+        private static void Listen (int ipepIndex)
         {
             // import maxReqGotNumber from config file
-            if (Conf.allConf.ContainsKey("listen-max"))
+            if (Conf.allConf.ContainsKey ("listen-max"))
             {
-                if (int.TryParse(Conf.allConf["listen-max"][0], out int arg))
+                if (int.TryParse (Conf.allConf["listen-max"][0], out int arg))
                 {
                     maxReqGotNumber = arg;
                 }
             }
             IPEndPoint ipep = localAddresses[ipepIndex];
-            Socket server = CreateServer(ipep);
+            Socket server = CreateServer (ipep);
             if (server != null)
             {
                 // init lists
                 servers[ipepIndex] = server;
                 // listen
-                server.Listen(100);
-                Console.WriteLine("start to Listen: {0}",
-                    server.LocalEndPoint.ToString());
+                server.Listen (100);
+                Console.WriteLine ("start to Listen: {0}",
+                    server.LocalEndPoint.ToString ());
                 // socket connections handle
                 while (IsRunning)
                 {
                     if (reqGotNumbers.Value >= maxReqGotNumber)
                     {
-                        Thread.Sleep(100); // wait until reqGotNumber < maxReqGotNumber
+                        Thread.Sleep (100); // wait until reqGotNumber < maxReqGotNumber
                     }
                     else
                     {
                         Socket client;
                         try
                         {
-                            client = server.Accept();
+                            client = server.Accept ();
                         }
                         catch (SocketException se)
                         {
-                            Console.WriteLine("{0}",
+                            Console.WriteLine ("{0}",
                                 se.Message);
                             client = null;
-                            Close();
+                            Close ();
                         }
                         catch (ObjectDisposedException) { client = null; }
 
@@ -188,42 +179,42 @@ namespace eagle.tunnel.dotnet.core
                             // set timeout to avoid ddos
                             client.SendTimeout = Conf.PipeTimeOut;
                             client.ReceiveTimeout = Conf.PipeTimeOut;
-                            reqGotNumbers.Up();
-                            HandleClientAsync(client, ipepIndex);
+                            reqGotNumbers.Up ();
+                            HandleClientAsync (client, ipepIndex);
                         }
                     }
                 }
             }
             else
             {
-                Console.WriteLine("error: fail to create server -> {0}", ipep.ToString());
+                Console.WriteLine ("error: fail to create server -> {0}", ipep.ToString ());
             }
         }
 
-        private static void HandleClientAsync(Socket socket2Client, int ipepIndex)
+        private static void HandleClientAsync (Socket socket2Client, int ipepIndex)
         {
             object[] args = new object[2] { socket2Client, ipepIndex };
-            Task taskHandleClient = new Task(() => handleClient(socket2Client, ipepIndex),
+            Task taskHandleClient = new Task (() => handleClient (socket2Client, ipepIndex),
                 TaskCreationOptions.LongRunning);
-            taskHandleClient.Start();
+            taskHandleClient.Start ();
         }
 
-        private static void handleClient(Socket socket2Client, int ipepIndex)
+        private static void handleClient (Socket socket2Client, int ipepIndex)
         {
-            Tunnel tunnel2Add = TunnelPool.Get(socket2Client, null, Conf.encryptionKey);
-            bool result = RequestHandler.Handle(tunnel2Add);
+            Tunnel tunnel2Add = TunnelPool.Get (socket2Client, null, Conf.encryptionKey);
+            bool result = RequestHandler.Handle (tunnel2Add);
             if (result)
             {
-                tunnel2Add.Flow();
+                tunnel2Add.Flow ();
             }
             else
             {
-                tunnel2Add.Close();
+                tunnel2Add.Close ();
             }
-            reqGotNumbers.Down();
+            reqGotNumbers.Down ();
         }
 
-        public static double Speed()
+        public static double Speed ()
         {
             double speed = 0;
             foreach (EagleTunnelUser item in EagleTunnelUser.users.Values)
@@ -237,13 +228,13 @@ namespace eagle.tunnel.dotnet.core
             return speed;
         }
 
-        private static void LimitSpeed()
+        private static void LimitSpeed ()
         {
-            if (Conf.allConf.ContainsKey("speed-check"))
+            if (Conf.allConf.ContainsKey ("speed-check"))
             {
                 if (Conf.allConf["speed-check"][0] == "on")
                 {
-                    if (Conf.allConf.ContainsKey("speed-limit"))
+                    if (Conf.allConf.ContainsKey ("speed-limit"))
                     {
                         if (Conf.allConf["speed-limit"][0] == "on")
                         {
@@ -251,9 +242,9 @@ namespace eagle.tunnel.dotnet.core
                             {
                                 foreach (EagleTunnelUser item in EagleTunnelUser.users.Values)
                                 {
-                                    item.LimitSpeedAsync();
+                                    item.LimitSpeedAsync ();
                                 }
-                                Thread.Sleep(5000);
+                                Thread.Sleep (5000);
                             }
                         }
                     }
@@ -261,12 +252,12 @@ namespace eagle.tunnel.dotnet.core
             }
         }
 
-        public static void Close()
+        public static void Close ()
         {
             if (IsRunning)
             {
                 IsRunning = false;
-                Thread.Sleep(1000);
+                Thread.Sleep (1000);
                 // stop listening
                 lock (servers)
                 {
@@ -276,23 +267,22 @@ namespace eagle.tunnel.dotnet.core
                         {
                             try
                             {
-                                item.Close();
+                                item.Close ();
                             }
                             catch {; }
                         }
                     }
                 }
-                EagleTunnelHandler.StopResolvInside();
-                EagleTunnelSender.CloseTunnelPool();
-                TunnelPool.StopCheck();
-                ByteBufferPool.StopCheck();
+                EagleTunnelHandler.StopResolvInside ();
+                TunnelPool.StopCheck ();
+                ByteBufferPool.StopCheck ();
             }
         }
 
-        public static void CloseAsync()
+        public static void CloseAsync ()
         {
-            Task taskClose = new Task(() => Close());
-            taskClose.Start();
+            Task taskClose = new Task (() => Close ());
+            taskClose.Start ();
         }
     }
 }

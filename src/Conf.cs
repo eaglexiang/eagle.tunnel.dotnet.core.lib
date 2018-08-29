@@ -5,20 +5,28 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 
-namespace eagle.tunnel.dotnet.core {
-    public class Conf {
-        public enum ProxyStatus {
+namespace eagle.tunnel.dotnet.core
+{
+    public class Conf
+    {
+        public enum ProxyStatus
+        {
             DISABLE,
             ENABLE,
             SMART
         }
-        private static string ConfDirPath {
-            get {
+        private static string ConfDirPath
+        {
+            get
+            {
                 string path;
-                if (allConf.ContainsKey ("config-dir")) {
+                if (allConf.ContainsKey ("config-dir"))
+                {
                     path = allConf["config-dir"][0] + Path.DirectorySeparatorChar;
 
-                } else {
+                }
+                else
+                {
                     string dir = Path.GetDirectoryName (confFilePath);
                     path = dir + Path.DirectorySeparatorChar;
                 }
@@ -28,74 +36,95 @@ namespace eagle.tunnel.dotnet.core {
         public static ArrayList whitelist_domain;
         private static ArrayList whitelist_ip;
         private static ArrayList blacklist_ip;
-        public static ConcurrentDictionary<string, IPAddress> hosts;
+        public static ConcurrentDictionary<string, IPAddress> hosts =
+            new ConcurrentDictionary<string, IPAddress>();
         private static string confFilePath;
         public static int PipeTimeOut;
         private static EagleTunnelUser localUser;
-        public static EagleTunnelUser LocalUser {
-            get {
+        public static EagleTunnelUser LocalUser
+        {
+            get
+            {
                 return localUser;
             }
-            set {
+            set
+            {
                 localUser = value;
                 allConf.TryAdd ("user", new List<string> ());
-                if (allConf["user"].Count == 0) {
+                if (allConf["user"].Count == 0)
+                {
                     allConf["user"].Add ("");
                 }
                 allConf["user"][0] = localUser.ToString ();
             }
         }
         private static bool enableSOCKS;
-        public static bool EnableSOCKS {
-            get {
+        public static bool EnableSOCKS
+        {
+            get
+            {
                 return enableSOCKS;
             }
-            set {
+            set
+            {
                 enableSOCKS = value;
                 allConf.TryAdd ("socks", new List<string> ());
-                if (allConf["socks"].Count == 0) {
+                if (allConf["socks"].Count == 0)
+                {
                     allConf["socks"].Add ("");
                 }
                 allConf["socks"][0] = value? "on": "off";
             }
         }
         private static bool enableHTTP;
-        public static bool EnableHTTP {
-            get {
+        public static bool EnableHTTP
+        {
+            get
+            {
                 return enableHTTP;
             }
-            set {
+            set
+            {
                 enableHTTP = value;
                 allConf.TryAdd ("http", new List<string> ());
-                if (allConf["http"].Count == 0) {
+                if (allConf["http"].Count == 0)
+                {
                     allConf["http"].Add ("");
                 }
                 allConf["http"][0] = value? "on": "off";
             }
         }
         private static bool enableEagleTunnel;
-        public static bool EnableEagleTunnel {
-            get {
+        public static bool EnableEagleTunnel
+        {
+            get
+            {
                 return enableEagleTunnel;
             }
-            set {
+            set
+            {
                 enableEagleTunnel = value;
                 allConf.TryAdd ("et", new List<string> ());
-                if (allConf["et"].Count == 0) {
+                if (allConf["et"].Count == 0)
+                {
                     allConf["et"].Add ("");
                 }
                 allConf["et"][0] = value? "on": "off";
             }
         }
         private static ProxyStatus proxyStatus;
-        public static ProxyStatus Status {
-            get {
+        public static ProxyStatus Status
+        {
+            get
+            {
                 return proxyStatus;
             }
-            set {
+            set
+            {
                 proxyStatus = value;
                 allConf.TryAdd ("proxy-status", new List<string> ());
-                if (allConf["proxy-status"].Count == 0) {
+                if (allConf["proxy-status"].Count == 0)
+                {
                     allConf["proxy-status"].Add ("");
                 }
                 allConf["proxy-status"][0] = value.ToString ();
@@ -104,31 +133,41 @@ namespace eagle.tunnel.dotnet.core {
         public static ConcurrentDictionary<string, List<string>> allConf;
         public static int maxClientsCount;
         private static IPEndPoint[] localAddresses;
-        public static IPEndPoint[] LocalAddresses {
-            get {
+        public static IPEndPoint[] LocalAddresses
+        {
+            get
+            {
                 return localAddresses;
             }
-            set {
+            set
+            {
                 localAddresses = value;
-                if (!allConf.TryAdd ("listen", new List<string> ())) {
+                if (!allConf.TryAdd ("listen", new List<string> ()))
+                {
                     allConf["listen"] = new List<string> ();
                 }
-                foreach (IPEndPoint item in value) {
+                foreach (IPEndPoint item in value)
+                {
                     allConf["listen"].Add (item.ToString ());
                 }
             }
         }
         private static IPEndPoint[] remoteAddresses;
-        public static IPEndPoint[] RemoteAddresses {
-            get {
+        public static IPEndPoint[] RemoteAddresses
+        {
+            get
+            {
                 return remoteAddresses;
             }
-            set {
+            set
+            {
                 remoteAddresses = value;
-                if (!allConf.TryAdd ("relayer", new List<string> ())) {
+                if (!allConf.TryAdd ("relayer", new List<string> ()))
+                {
                     allConf["relayer"] = new List<string> ();
                 }
-                foreach (IPEndPoint item in value) {
+                foreach (IPEndPoint item in value)
+                {
                     allConf["relayer"].Add (item.ToString ());
                 }
             }
@@ -136,15 +175,21 @@ namespace eagle.tunnel.dotnet.core {
         public static int DnsCacheTtl { get; set; } = 7200; // default 2h
         public static byte encryptionKey;
 
-        public static bool LocalAddress_Set (string address) {
+        public static bool LocalAddress_Set (string address)
+        {
             bool result = false;
-            if (address != null) {
+            if (address != null)
+            {
                 string[] args = address.Split (':');
-                if (args.Length >= 1) {
-                    if (IPAddress.TryParse (args[0], out IPAddress ipa)) {
+                if (args.Length >= 1)
+                {
+                    if (IPAddress.TryParse (args[0], out IPAddress ipa))
+                    {
                         int _port = 8080;
-                        if (args.Length >= 2) {
-                            if (int.TryParse (args[1], out int port)) {
+                        if (args.Length >= 2)
+                        {
+                            if (int.TryParse (args[1], out int port))
+                            {
                                 _port = port;
                             }
                         }
@@ -158,15 +203,21 @@ namespace eagle.tunnel.dotnet.core {
             return result;
         }
 
-        public static bool RemoteAddress_Set (string address) {
+        public static bool RemoteAddress_Set (string address)
+        {
             bool result = false;
-            if (!string.IsNullOrEmpty (address)) {
+            if (!string.IsNullOrEmpty (address))
+            {
                 string[] args = address.Split (':');
-                if (args.Length >= 1) {
-                    if (IPAddress.TryParse (args[0], out IPAddress ipa)) {
+                if (args.Length >= 1)
+                {
+                    if (IPAddress.TryParse (args[0], out IPAddress ipa))
+                    {
                         int _port = 8080;
-                        if (args.Length >= 2) {
-                            if (int.TryParse (args[1], out int port)) {
+                        if (args.Length >= 2)
+                        {
+                            if (int.TryParse (args[1], out int port))
+                            {
                                 _port = port;
                             }
                         }
@@ -181,21 +232,25 @@ namespace eagle.tunnel.dotnet.core {
         }
 
         private static int indexOfRemoteAddresses;
-        private static int GetIndexOfRemoteAddresses () {
+        private static int GetIndexOfRemoteAddresses ()
+        {
             int result = indexOfRemoteAddresses++;
             result %= remoteAddresses.Length;
             return result;
         }
 
-        public static IPEndPoint GetRemoteIPEndPoint () {
+        public static IPEndPoint GetRemoteIPEndPoint ()
+        {
             IPEndPoint result = null;
-            if (RemoteAddresses != null) {
+            if (RemoteAddresses != null)
+            {
                 result = RemoteAddresses[GetIndexOfRemoteAddresses ()];
             }
             return result;
         }
 
-        public static void Init (string confPath) {
+        public static void Init (string confPath)
+        {
             allConf = new ConcurrentDictionary<string, List<string>> (StringComparer.OrdinalIgnoreCase);
             confFilePath = confPath;
             ReadAll ();
@@ -204,80 +259,105 @@ namespace eagle.tunnel.dotnet.core {
             Console.WriteLine ("find user(s): {0}", EagleTunnelUser.users.Count);
 
             encryptionKey = 0x22;
-            if(allConf.ContainsKey("data-key")){
-                if(byte.TryParse(allConf["data-key"][0], out byte tmpByte)){
+            if (allConf.ContainsKey ("data-key"))
+            {
+                if (byte.TryParse (allConf["data-key"][0], out byte tmpByte))
+                {
                     encryptionKey = tmpByte;
                 }
             }
 
-            if (allConf.ContainsKey ("user")) {
-                if (EagleTunnelUser.TryParse (allConf["user"][0], out EagleTunnelUser user, true)) {
+            if (allConf.ContainsKey ("user"))
+            {
+                if (EagleTunnelUser.TryParse (allConf["user"][0], out EagleTunnelUser user, true))
+                {
                     localUser = user;
                 }
             }
-            if (LocalUser != null) {
+            if (LocalUser != null)
+            {
                 Console.WriteLine ("User: {0}", LocalUser.ID);
             }
 
             PipeTimeOut = 0;
-            if (Conf.allConf.ContainsKey ("timeout")) {
-                if (int.TryParse (Conf.allConf["timeout"][0], out int timeout)) {
+            if (Conf.allConf.ContainsKey ("timeout"))
+            {
+                if (int.TryParse (Conf.allConf["timeout"][0], out int timeout))
+                {
                     PipeTimeOut = timeout;
                 }
             }
             Console.WriteLine ("TimeOut(ms): {0} (0 means infinite timeout period.)", PipeTimeOut);
 
             maxClientsCount = 500;
-            if (allConf.ContainsKey ("worker")) {
-                if (int.TryParse (allConf["worker"][0], out int workerCount)) {
+            if (allConf.ContainsKey ("worker"))
+            {
+                if (int.TryParse (allConf["worker"][0], out int workerCount))
+                {
                     maxClientsCount = workerCount;
                 }
             }
             Console.WriteLine ("worker: {0}", maxClientsCount);
 
-            try {
+            try
+            {
                 List<string> remoteAddressStrs = Conf.allConf["relayer"];
                 remoteAddresses = CreateEndPoints (remoteAddressStrs);
-            } catch (KeyNotFoundException) {
+            }
+            catch (KeyNotFoundException)
+            {
                 Console.WriteLine ("Warning: Relayer not found.");
             }
-            if (RemoteAddresses != null) {
+            if (RemoteAddresses != null)
+            {
                 Console.WriteLine ("Count of Relayer: {0}", RemoteAddresses.Length);
             }
 
-            try {
+            try
+            {
                 List<string> localAddressStrs = Conf.allConf["listen"];
                 localAddresses = CreateEndPoints (localAddressStrs);
 
-            } catch (KeyNotFoundException) {
+            }
+            catch (KeyNotFoundException)
+            {
                 Console.WriteLine ("Warning: Listen not found");
             }
 
-            if (allConf.ContainsKey ("socks")) {
-                if (allConf["socks"][0] == "on") {
+            if (allConf.ContainsKey ("socks"))
+            {
+                if (allConf["socks"][0] == "on")
+                {
                     enableSOCKS = true;
                 }
             }
             Console.WriteLine ("SOCKS Switch: {0}", EnableSOCKS.ToString ());
 
-            if (allConf.ContainsKey ("http")) {
-                if (allConf["http"][0] == "on") {
+            if (allConf.ContainsKey ("http"))
+            {
+                if (allConf["http"][0] == "on")
+                {
                     enableHTTP = true;
                 }
             }
             Console.WriteLine ("HTTP Switch: {0}", EnableHTTP.ToString ());
 
-            if (allConf.ContainsKey ("et")) {
-                if (allConf["et"][0] == "on") {
+            if (allConf.ContainsKey ("et"))
+            {
+                if (allConf["et"][0] == "on")
+                {
                     enableEagleTunnel = true;
                 }
             }
             Console.WriteLine ("Eagle Tunnel Switch: {0}", EnableEagleTunnel.ToString ());
 
-            if (allConf.ContainsKey ("proxy-status")) {
+            if (allConf.ContainsKey ("proxy-status"))
+            {
                 proxyStatus = (ProxyStatus) Enum.Parse (typeof (Conf.ProxyStatus),
                     allConf["proxy-status"][0].ToUpper ());
-            } else {
+            }
+            else
+            {
                 proxyStatus = ProxyStatus.ENABLE; // default enable proxy
             }
             Console.WriteLine ("Proxy Status: {0}", proxyStatus.ToString ());
@@ -287,44 +367,59 @@ namespace eagle.tunnel.dotnet.core {
             ImportHosts (out hosts);
         }
 
-        private static bool ImportList (string filename, out ArrayList list, string path = "") {
+        private static bool ImportList (string filename, out ArrayList list, string path = "")
+        {
             bool result = false;
-            if (path == "") {
+            if (path == "")
+            {
                 path = ConfDirPath;
                 path += filename;
             }
 
             string[] lines;
-            if (File.Exists (path)) {
+            if (File.Exists (path))
+            {
                 lines = File.ReadAllLines (path, System.Text.Encoding.UTF8);
-                for (int i = 0; i < lines.Length; ++i) {
+                for (int i = 0; i < lines.Length; ++i)
+                {
                     int indexOfSharp = lines[i].IndexOf ('#');
-                    if (indexOfSharp >= 0) {
+                    if (indexOfSharp >= 0)
+                    {
                         lines[i] = lines[i].Substring (0, indexOfSharp); // remote note
                     }
                     lines[i] = lines[i].Trim ();
                 }
-            } else {
+            }
+            else
+            {
                 lines = null;
             }
             list = new ArrayList ();
-            if (lines != null) {
+            if (lines != null)
+            {
                 list.AddRange (lines);
                 result = true;
             }
             return result;
         }
 
-        private static IPEndPoint[] CreateEndPoints (List<string> addresses) {
+        private static IPEndPoint[] CreateEndPoints (List<string> addresses)
+        {
             ArrayList list = new ArrayList ();
-            foreach (string address in addresses) {
+            foreach (string address in addresses)
+            {
                 string[] endpoints = address.Split (':');
-                if (endpoints.Length >= 1) {
-                    if (IPAddress.TryParse (endpoints[0], out IPAddress ipa)) {
+                if (endpoints.Length >= 1)
+                {
+                    if (IPAddress.TryParse (endpoints[0], out IPAddress ipa))
+                    {
                         int port;
-                        if (endpoints.Length >= 2) {
+                        if (endpoints.Length >= 2)
+                        {
                             port = int.Parse (endpoints[1]);
-                        } else {
+                        }
+                        else
+                        {
                             port = 8080;
                         }
                         IPEndPoint ipep = new IPEndPoint (ipa, port);
@@ -335,15 +430,20 @@ namespace eagle.tunnel.dotnet.core {
             return list.ToArray (typeof (IPEndPoint)) as IPEndPoint[];
         }
 
-        private static void ImportUsers () {
+        private static void ImportUsers ()
+        {
             if (allConf.ContainsKey ("user-check") &&
-                allConf["user-check"][0] == "on") {
+                allConf["user-check"][0] == "on")
+            {
                 ImportList ("users.list", out ArrayList users);
-                for (int i = 0; i < users.Count; ++i) {
+                for (int i = 0; i < users.Count; ++i)
+                {
                     string line = users[i] as string;
                     EagleTunnelUser.TryAdd (line);
                 }
-            } else {
+            }
+            else
+            {
                 EagleTunnelUser.TryAdd ("anoymous:anoymous");
             }
         }
@@ -352,11 +452,14 @@ namespace eagle.tunnel.dotnet.core {
         /// Read all configurations from file
         /// </summary>
         /// <param name="confPath">path of conf file</param>
-        private static void ReadAll () {
+        private static void ReadAll ()
+        {
             ImportList ("eagle-tunnel.conf", out ArrayList confs, confFilePath);
-            foreach (string line in confs) {
+            foreach (string line in confs)
+            {
                 string[] args = line.Split ('=');
-                if (args.Length == 2) {
+                if (args.Length == 2)
+                {
                     string key = args[0].Trim ();
                     string value = args[1].Trim ();
                     allConf.TryAdd (key, new List<string> ());
@@ -365,32 +468,46 @@ namespace eagle.tunnel.dotnet.core {
             }
         }
 
-        private static bool ImportHosts (out ConcurrentDictionary<string, IPAddress> hosts) {
+        private static bool ImportHosts (out ConcurrentDictionary<string, IPAddress> hosts)
+        {
             bool result = false;
             hosts = new ConcurrentDictionary<string, IPAddress> ();
             ArrayList lists = new ArrayList ();
-            DirectoryInfo di = new DirectoryInfo (ConfDirPath + "//hosts");
-            foreach (FileInfo i in di.GetFiles ()) {
-                int indOfDot = i.Name.LastIndexOf ('.');
-                if (indOfDot > 0) {
-                    if (i.Name.Substring (indOfDot + 1) == "hosts") {
-                        if (ImportList ("hosts/" + i.Name, out ArrayList list)) {
-                            lists.AddRange (list);
+            string pathOfHosts = ConfDirPath + "//hosts";
+            if (Directory.Exists (pathOfHosts))
+            {
+                DirectoryInfo di = new DirectoryInfo (pathOfHosts);
+                foreach (FileInfo i in di.GetFiles ())
+                {
+                    int indOfDot = i.Name.LastIndexOf ('.');
+                    if (indOfDot > 0)
+                    {
+                        if (i.Name.Substring (indOfDot + 1) == "hosts")
+                        {
+                            if (ImportList ("hosts/" + i.Name, out ArrayList list))
+                            {
+                                lists.AddRange (list);
+                            }
                         }
                     }
                 }
             }
-            if (lists.Count > 0) {
-                for (int i = 0; i < lists.Count; ++i) {
+            if (lists.Count > 0)
+            {
+                for (int i = 0; i < lists.Count; ++i)
+                {
                     string line = lists[i] as string;
                     string[] arr = line.Trim ().Split (new char[] { ' ' },
                         StringSplitOptions.RemoveEmptyEntries);
                     line = string.Join ("\t", arr);
                     arr = line.Trim ().Split (new char[] { '\t' },
                         StringSplitOptions.RemoveEmptyEntries);
-                    if (arr.Length == 2) {
-                        if (IPAddress.TryParse (arr[0], out IPAddress ip)) {
-                            if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) {
+                    if (arr.Length == 2)
+                    {
+                        if (IPAddress.TryParse (arr[0], out IPAddress ip))
+                        {
+                            if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                            {
                                 hosts.TryAdd (arr[1], ip);
                             }
                         }
@@ -401,15 +518,19 @@ namespace eagle.tunnel.dotnet.core {
             return result;
         }
 
-        public static void Save () {
+        public static void Save ()
+        {
             string allConf = ToString ();
             File.WriteAllText (confFilePath, allConf);
         }
 
-        public static new string ToString () {
+        public static new string ToString ()
+        {
             string result = "";
-            foreach (string key in allConf.Keys) {
-                foreach (string value in allConf[key]) {
+            foreach (string key in allConf.Keys)
+            {
+                foreach (string value in allConf[key])
+                {
                     result += (key + '=' + value + Environment.NewLine);
                 }
             }
