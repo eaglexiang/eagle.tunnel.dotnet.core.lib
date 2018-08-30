@@ -67,8 +67,8 @@ namespace eagle.tunnel.dotnet.core
 
         public void Set(string src, Encoding code)
         {
-            Length = code.GetBytes(src, 0, src.Length,
-            array, 0);
+            array = code.GetBytes(src);
+            Length = array.Length;
         }
 
         public void Set(string src)
