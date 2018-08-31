@@ -73,7 +73,8 @@ namespace eagle.tunnel.dotnet.core
                     //     }
                     // }
                     TunnelPool.StartCheck ();
-                    ByteBufferPool.StartCheck ();
+                    TunnelPool.Alloc(1024);
+                    ByteBufferPool.Alloc(1024);
 
                     servers = new Socket[localAddresses.Length];
                     reqGotNumbers = new ConCurrentCounter (100);
@@ -275,7 +276,6 @@ namespace eagle.tunnel.dotnet.core
                 }
                 EagleTunnelHandler.StopResolvInside ();
                 TunnelPool.StopCheck ();
-                ByteBufferPool.StopCheck ();
             }
         }
 

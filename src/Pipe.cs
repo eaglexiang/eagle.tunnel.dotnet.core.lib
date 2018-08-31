@@ -104,7 +104,7 @@ namespace eagle.tunnel.dotnet.core
                 ByteBuffer buffer = ByteBufferPool.Get ();
                 buffer.Set (msg, code);
                 result = Write (buffer);
-                buffer.Using = false;
+                ByteBufferPool.Release(buffer);
             }
             return result;
         }
@@ -118,7 +118,7 @@ namespace eagle.tunnel.dotnet.core
             {
                 result = buffer.ToString ();
             }
-            buffer.Using = false;
+            ByteBufferPool.Release(buffer);
             return result;
         }
 
@@ -184,7 +184,7 @@ namespace eagle.tunnel.dotnet.core
                     Close ();
                 }
             }
-            buffer.Using = false;
+            ByteBufferPool.Release(buffer);
         }
 
         public void Encrypt (ByteBuffer src)

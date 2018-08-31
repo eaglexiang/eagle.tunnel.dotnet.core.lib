@@ -39,7 +39,7 @@ namespace eagle.tunnel.dotnet.core
                                     break;
                             }
                         }
-                        buffer.Using = false;
+                        ByteBufferPool.Release(buffer);
                     }
                 }
             }

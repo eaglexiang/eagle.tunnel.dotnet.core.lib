@@ -7,18 +7,15 @@ namespace eagle.tunnel.dotnet.core
     public class ByteBuffer
     {
         public byte[] array;
-        public bool Using { get; set; }
         public int Length { get; set; }
         public ByteBuffer()
         {
             array = new byte[102400];
-            Using = false;
             Length = 0;
         }
 
         public void Restore()
         {
-            Using = false;
             Length = 0;
         }
 

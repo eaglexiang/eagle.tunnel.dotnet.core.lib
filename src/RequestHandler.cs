@@ -59,7 +59,7 @@ namespace eagle.tunnel.dotnet.core
                             break;
                     }
                 }
-                firstMsg.Using = false;
+                ByteBufferPool.Release(firstMsg);
             }
             return result;
         }

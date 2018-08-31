@@ -48,10 +48,6 @@ namespace eagle.tunnel.dotnet.core
                     used = new ConcurrentQueue<Tunnel> ();
                     Task.Factory.StartNew (() => CheckTunnels (), TaskCreationOptions.LongRunning);
                     IsRunning = true;
-                    if (pool.IsEmpty && used.IsEmpty)
-                    {
-                        Alloc (1024);
-                    }
                 }
             }
         }
