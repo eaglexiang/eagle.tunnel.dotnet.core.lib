@@ -11,7 +11,7 @@ namespace eagle.tunnel.dotnet.core
         private static bool CreateTunnel (out Tunnel tunnel)
         {
             bool succeed = false;
-            Tunnel result = TunnelPool.Get (null, null, Conf.encryptionKey);
+            Tunnel result = new Tunnel (null, null, Conf.encryptionKey);
             succeed = Connect2Relayer (result);
             if (succeed)
             {

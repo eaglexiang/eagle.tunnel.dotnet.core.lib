@@ -11,9 +11,8 @@ namespace eagle.tunnel.dotnet.core {
             while (!pool.TryDequeue (out result)) {
                 Thread.Sleep (100);
             }
-            int countOfBufferPool = ByteBufferPool.pool.Count;
-            int countOfTunnelPool = TunnelPool.pool.Count;
-            System.Console.Write ("bufferPool: {0}\n", countOfBufferPool);
+            // int countOfBufferPool = ByteBufferPool.pool.Count;
+            // System.Console.Write ("bufferPool: {0}\n", countOfBufferPool);
             return result;
         }
 

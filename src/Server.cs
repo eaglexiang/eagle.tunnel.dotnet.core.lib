@@ -72,8 +72,6 @@ namespace eagle.tunnel.dotnet.core
                     //         EagleTunnelSender.OpenTunnelPool ();
                     //     }
                     // }
-                    TunnelPool.StartCheck ();
-                    TunnelPool.Alloc(1024);
                     ByteBufferPool.Alloc(1024);
 
                     servers = new Socket[localAddresses.Length];
@@ -202,7 +200,7 @@ namespace eagle.tunnel.dotnet.core
 
         private static void handleClient (Socket socket2Client, int ipepIndex)
         {
-            Tunnel tunnel2Add = TunnelPool.Get (socket2Client, null, Conf.encryptionKey);
+            Tunnel tunnel2Add = new Tunnel(socket2Client,null,Conf.encryptionKey);
             bool result = RequestHandler.Handle (tunnel2Add);
             if (result)
             {
@@ -275,7 +273,6 @@ namespace eagle.tunnel.dotnet.core
                     }
                 }
                 EagleTunnelHandler.StopResolvInside ();
-                TunnelPool.StopCheck ();
             }
         }
 
