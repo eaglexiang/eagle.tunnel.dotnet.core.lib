@@ -101,10 +101,9 @@ namespace eagle.tunnel.dotnet.core
             int result = -1;
             if (!string.IsNullOrEmpty (msg))
             {
-                ByteBuffer buffer = ByteBufferPool.Get ();
+                ByteBuffer buffer = new ByteBuffer();
                 buffer.Set (msg, code);
                 result = Write (buffer);
-                ByteBufferPool.Release(buffer);
             }
             return result;
         }
@@ -112,13 +111,12 @@ namespace eagle.tunnel.dotnet.core
         public string ReadString ()
         {
             string result = "";
-            ByteBuffer buffer = ByteBufferPool.Get ();
+            ByteBuffer buffer = new ByteBuffer();
             ReadByte (buffer);
             if (buffer.Length > 0)
             {
                 result = buffer.ToString ();
             }
-            ByteBufferPool.Release(buffer);
             return result;
         }
 
@@ -167,7 +165,7 @@ namespace eagle.tunnel.dotnet.core
 
         private void _Flow ()
         {
-            ByteBuffer buffer = ByteBufferPool.Get ();
+            ByteBuffer buffer = new ByteBuffer();
             while (IsRunning)
             {
                 ReadByte (buffer);
@@ -184,7 +182,6 @@ namespace eagle.tunnel.dotnet.core
                     Close ();
                 }
             }
-            ByteBufferPool.Release(buffer);
         }
 
         public void Encrypt (ByteBuffer src)

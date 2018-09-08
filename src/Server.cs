@@ -62,17 +62,6 @@ namespace eagle.tunnel.dotnet.core
                     {
                         EagleTunnelHandler.StartResolvInside ();
                     }
-                    // if (Conf.allConf.ContainsKey ("http")) {
-                    //     if (Conf.allConf["http"][0] == "on") {
-                    //         EagleTunnelSender.OpenTunnelPool ();
-                    //     }
-                    // }
-                    // if (Conf.allConf.ContainsKey ("socks")) {
-                    //     if (Conf.allConf["socks"][0] == "on") {
-                    //         EagleTunnelSender.OpenTunnelPool ();
-                    //     }
-                    // }
-                    ByteBufferPool.Alloc(1024);
 
                     servers = new Socket[localAddresses.Length];
                     reqGotNumbers = new ConCurrentCounter (100);
