@@ -28,7 +28,7 @@ namespace eagle.tunnel.dotnet.core
             }
             else
             {
-                ByteBuffer firstMsg = ByteBufferPool.Get();
+                ByteBuffer firstMsg = new ByteBuffer();
                 int read = tunnel.ReadL(firstMsg);
                 if (read > 0)
                 {
@@ -59,7 +59,6 @@ namespace eagle.tunnel.dotnet.core
                             break;
                     }
                 }
-                firstMsg.Using = false;
             }
             return result;
         }

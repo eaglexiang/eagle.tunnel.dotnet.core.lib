@@ -27,7 +27,7 @@ namespace eagle.tunnel.dotnet.core
                     result = tunnel.WriteL (reply);
                     if (result)
                     {
-                        ByteBuffer buffer = ByteBufferPool.Get ();
+                        ByteBuffer buffer = new ByteBuffer();
                         int read = tunnel.ReadL (buffer);
                         if (read >= 2)
                         {
@@ -39,7 +39,6 @@ namespace eagle.tunnel.dotnet.core
                                     break;
                             }
                         }
-                        buffer.Using = false;
                     }
                 }
             }

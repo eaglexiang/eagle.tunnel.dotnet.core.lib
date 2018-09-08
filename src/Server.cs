@@ -62,18 +62,6 @@ namespace eagle.tunnel.dotnet.core
                     {
                         EagleTunnelHandler.StartResolvInside ();
                     }
-                    // if (Conf.allConf.ContainsKey ("http")) {
-                    //     if (Conf.allConf["http"][0] == "on") {
-                    //         EagleTunnelSender.OpenTunnelPool ();
-                    //     }
-                    // }
-                    // if (Conf.allConf.ContainsKey ("socks")) {
-                    //     if (Conf.allConf["socks"][0] == "on") {
-                    //         EagleTunnelSender.OpenTunnelPool ();
-                    //     }
-                    // }
-                    TunnelPool.StartCheck ();
-                    ByteBufferPool.StartCheck ();
 
                     servers = new Socket[localAddresses.Length];
                     reqGotNumbers = new ConCurrentCounter (100);
@@ -201,7 +189,7 @@ namespace eagle.tunnel.dotnet.core
 
         private static void handleClient (Socket socket2Client, int ipepIndex)
         {
-            Tunnel tunnel2Add = TunnelPool.Get (socket2Client, null, Conf.encryptionKey);
+            Tunnel tunnel2Add = new Tunnel(socket2Client,null,Conf.encryptionKey);
             bool result = RequestHandler.Handle (tunnel2Add);
             if (result)
             {
@@ -274,8 +262,6 @@ namespace eagle.tunnel.dotnet.core
                     }
                 }
                 EagleTunnelHandler.StopResolvInside ();
-                TunnelPool.StopCheck ();
-                ByteBufferPool.StopCheck ();
             }
         }
 
